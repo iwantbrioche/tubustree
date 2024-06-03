@@ -25,22 +25,26 @@ using BepInEx.Logging;
 
 namespace ModTemplate
 {
-    [BepInPlugin(MOD_ID, "modname", "1.0.0")]
+    [BepInPlugin(MOD_ID, MOD_NAME, MOD_VER)]
     public class ModTemplate : BaseUnityPlugin
     {
         public const string MOD_ID = "name.id";
+        public const string MOD_NAME = "modname";
+        public const string MOD_VER = "1.0.0";
         public static new ManualLogSource Logger { get; private set; }
         public static RemixTemplate remix;
         private void OnEnable()
         {
-            On.RainWorld.OnModsInit += RainWorldOnOnModsInit;
+            On.RainWorld.OnModsInit += RainWorld_OnModsInit;
+            On.RainWorld.PostModsInit += RainWorld_PostModsInit;
             remix = new RemixTemplate();
             Logger = base.Logger;
         }
 
         private bool IsInit;
+        private bool PostIsInit;
 
-        private void RainWorldOnOnModsInit(On.RainWorld.orig_OnModsInit orig, RainWorld self)
+        private void RainWorld_OnModsInit(On.RainWorld.orig_OnModsInit orig, RainWorld self)
         {
             orig(self);
             try
@@ -53,7 +57,23 @@ namespace ModTemplate
             }
             catch (Exception ex)
             {
-                Logger.LogError("Mod failed to load!");
+                Logger.LogError($"{MOD_NAME} failed to load!");
+                Logger.LogError(ex);
+                throw;
+            }
+        }
+        private void RainWorld_PostModsInit(On.RainWorld.orig_PostModsInit orig, RainWorld self)
+        {
+            orig(self);
+            try
+            {
+                if (PostIsInit) return;
+
+                PostIsInit = true;
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError($"{MOD_NAME} PostModsInit failed to load!");
                 Logger.LogError(ex);
                 throw;
             }
