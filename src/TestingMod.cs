@@ -17,27 +17,28 @@ global using Custom = RWCustom.Custom;
 using System.Security;
 using System.Security.Permissions;
 using BepInEx.Logging;
+using System.Runtime.CompilerServices;
 
 #pragma warning disable CS0618
 
 [module: UnverifiableCode]
 [assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
 
-namespace ModTemplate
+namespace TestingMod
 {
     [BepInPlugin(MOD_ID, MOD_NAME, MOD_VER)]
-    public class ModTemplate : BaseUnityPlugin
+    public class TestingMod : BaseUnityPlugin
     {
-        public const string MOD_ID = "name.id";
-        public const string MOD_NAME = "modname";
-        public const string MOD_VER = "1.0.0";
+        public const string MOD_ID = "iwantbread.testmod";
+        public const string MOD_NAME = "Testin'";
+        public const string MOD_VER = "1.0";
         public static new ManualLogSource Logger { get; private set; }
-        public static RemixTemplate remix;
+        public static RemixTesting remix;
         private void OnEnable()
         {
             On.RainWorld.OnModsInit += RainWorld_OnModsInit;
             On.RainWorld.PostModsInit += RainWorld_PostModsInit;
-            remix = new RemixTemplate();
+            remix = new RemixTesting();
             Logger = base.Logger;
         }
 
@@ -52,6 +53,7 @@ namespace ModTemplate
                 if (IsInit) return;
 
                 MachineConnector.SetRegisteredOI(MOD_ID, remix);
+                Hooks.PatchHooks();
 
                 IsInit = true;
             }
@@ -62,6 +64,7 @@ namespace ModTemplate
                 throw;
             }
         }
+
         private void RainWorld_PostModsInit(On.RainWorld.orig_PostModsInit orig, RainWorld self)
         {
             orig(self);
@@ -78,5 +81,6 @@ namespace ModTemplate
                 throw;
             }
         }
+
     }
 }
