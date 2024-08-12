@@ -1,9 +1,9 @@
 ﻿
-namespace ModTemplate
+namespace TestingMod
 {
-    public class RemixTemplate : OptionInterface
+    public class RemixTesting : OptionInterface
     {
-        public RemixTemplate() 
+        public RemixTesting() 
         {
 
         }
