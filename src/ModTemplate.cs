@@ -52,6 +52,7 @@ namespace ModTemplate
                 if (IsInit) return;
 
                 MachineConnector.SetRegisteredOI(MOD_ID, remix);
+                Hooks.Hooks.PatchAll();
 
                 IsInit = true;
             }
