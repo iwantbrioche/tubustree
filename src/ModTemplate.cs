@@ -17,6 +17,7 @@ global using Custom = RWCustom.Custom;
 using System.Security;
 using System.Security.Permissions;
 using BepInEx.Logging;
+using System.Runtime.CompilerServices;
 
 #pragma warning disable CS0618
 
@@ -28,16 +29,16 @@ namespace ModTemplate
     [BepInPlugin(MOD_ID, MOD_NAME, MOD_VER)]
     public class ModTemplate : BaseUnityPlugin
     {
-        public const string MOD_ID = "name.id";
-        public const string MOD_NAME = "modname";
-        public const string MOD_VER = "1.0.0";
+        public const string MOD_ID = "id.name";
+        public const string MOD_NAME = "ModTemplate";
+        public const string MOD_VER = "1.0";
         public static new ManualLogSource Logger { get; private set; }
-        public static RemixTemplate remix;
+        public static TemplateRemix remix;
         private void OnEnable()
         {
             On.RainWorld.OnModsInit += RainWorld_OnModsInit;
             On.RainWorld.PostModsInit += RainWorld_PostModsInit;
-            remix = new RemixTemplate();
+            remix = new TemplateRemix();
             Logger = base.Logger;
         }
 
@@ -63,6 +64,7 @@ namespace ModTemplate
                 throw;
             }
         }
+
         private void RainWorld_PostModsInit(On.RainWorld.orig_PostModsInit orig, RainWorld self)
         {
             orig(self);
@@ -79,5 +81,6 @@ namespace ModTemplate
                 throw;
             }
         }
+
     }
 }
