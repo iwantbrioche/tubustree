@@ -1,5 +1,5 @@
 ﻿
-namespace ModTemplate
+namespace TubusTree
 {
     public class TemplateRemix : OptionInterface
     {

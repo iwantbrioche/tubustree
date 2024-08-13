@@ -18,27 +18,28 @@ using System.Security;
 using System.Security.Permissions;
 using BepInEx.Logging;
 using System.Runtime.CompilerServices;
+using Tubus.PomObjects;
 
 #pragma warning disable CS0618
 
 [module: UnverifiableCode]
 [assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
 
-namespace ModTemplate
+namespace TubusTree
 {
     [BepInPlugin(MOD_ID, MOD_NAME, MOD_VER)]
-    public class ModTemplate : BaseUnityPlugin
+    public class TubusPlugin : BaseUnityPlugin
     {
-        public const string MOD_ID = "id.name";
-        public const string MOD_NAME = "ModTemplate";
+        public const string MOD_ID = "iwantbread.tubus";
+        public const string MOD_NAME = "Tubus Tree";
         public const string MOD_VER = "1.0";
         public static new ManualLogSource Logger { get; private set; }
-        public static TemplateRemix remix;
+        //public static TemplateRemix remix;
         private void OnEnable()
         {
             On.RainWorld.OnModsInit += RainWorld_OnModsInit;
             On.RainWorld.PostModsInit += RainWorld_PostModsInit;
-            remix = new TemplateRemix();
+            //remix = new TemplateRemix();
             Logger = base.Logger;
         }
 
@@ -52,7 +53,7 @@ namespace ModTemplate
             {
                 if (IsInit) return;
 
-                MachineConnector.SetRegisteredOI(MOD_ID, remix);
+                //MachineConnector.SetRegisteredOI(MOD_ID, remix);
                 Hooks.Hooks.PatchAll();
 
                 IsInit = true;
@@ -71,6 +72,8 @@ namespace ModTemplate
             try
             {
                 if (PostIsInit) return;
+
+                RegisterObjects.RegisterPOMObjects();
 
                 PostIsInit = true;
             }

@@ -1,0 +1,2 @@
+Template: NONE
+PlacedObjects: DangleFruit><237.8394><551.3211><0~0~2~3, DangleFruit><264.8752><527.406><0~0~2~3, DangleFruit><286.4497><573.5106><0~0~2~3, Tubus Tree><511.1558><56.62463><-114~72~3697, Tubus Tree><670.0847><62.38748><111~58~6414, 

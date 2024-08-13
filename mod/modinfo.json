@@ -1,12 +1,12 @@
 {
-  "id": "id.name",
-  "name": "ModTemplate",
+  "id": "iwantbread.tubus",
+  "name": "Tubus Tree",
   "version": "1.0",
   "target_game_version": "v1.9.15",
   "authors": "",
   "description": "",
-  "requirements": [ ],
-  "requirements_names": [ ],
+  "requirements": ["pom", "fisobs"],
+  "requirements_names": ["POM", "Fisobs"],
   "priorities": [ ], 
   "checksum_override_version": false
 }
