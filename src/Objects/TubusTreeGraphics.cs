@@ -222,11 +222,11 @@ namespace Tubus.Objects
             }
 
         }
-        public TubusTreeObject tubusTree;
+        public TubusTree tubusTree;
         public Branches branches;
         public TubusTreeGraphics(PhysicalObject ow) : base(ow, false)
         {
-            tubusTree = ow as TubusTreeObject;
+            tubusTree = ow as TubusTree;
         }
 
         public override void InitiateSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam)
@@ -235,7 +235,7 @@ namespace Tubus.Objects
             sLeaser.sprites = new FSprite[2 + branches.totalSprites];
             sLeaser.sprites[0] = new FSprite("Circle20");
             sLeaser.sprites[1] = new FSprite("Circle20");
-            sLeaser.sprites[0].scale = 1.3f;
+            sLeaser.sprites[0].scale = 1.5f;
             branches.firstSprite = 2;
             branches.InitiateSprites(sLeaser);
 

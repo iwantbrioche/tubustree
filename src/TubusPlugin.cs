@@ -25,7 +25,7 @@ using Tubus.PomObjects;
 [module: UnverifiableCode]
 [assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
 
-namespace TubusTree
+namespace TubusTreeObject
 {
     [BepInPlugin(MOD_ID, MOD_NAME, MOD_VER)]
     public class TubusPlugin : BaseUnityPlugin
