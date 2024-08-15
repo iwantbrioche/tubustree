@@ -42,8 +42,11 @@ namespace Tubus.Objects
         public override void Update(bool eu)
         {
             base.Update(eu);
-            bodyChunks[0].HardSetPosition(room.MiddleOfTile(origPos));
-            bodyChunks[1].HardSetPosition(bodyChunks[0].pos + new Vector2(0f, 20f));
+            bodyChunks[0].HardSetPosition(origPos);
+            Random.State state = Random.state;
+            Random.InitState(seed);
+            bodyChunks[1].HardSetPosition(bodyChunks[0].pos + Custom.RotateAroundOrigo(new Vector2(0f, 20f), Random.Range(-8f, 8f)));
+            Random.state = state;
         }
     }
 }
