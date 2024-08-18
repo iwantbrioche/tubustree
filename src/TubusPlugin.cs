@@ -46,6 +46,8 @@ namespace TubusTreeObject
         private bool IsInit;
         private bool PostIsInit;
 
+        public static FShader TubusTrunk;
+
         private void RainWorld_OnModsInit(On.RainWorld.orig_OnModsInit orig, RainWorld self)
         {
             orig(self);
@@ -55,6 +57,13 @@ namespace TubusTreeObject
 
                 //MachineConnector.SetRegisteredOI(MOD_ID, remix);
                 Hooks.Hooks.PatchAll();
+
+                AssetBundle bundle = AssetBundle.LoadFromFile(AssetManager.ResolveFilePath("assets/tubus"));
+                Shader trunkShader = bundle.LoadAsset<Shader>("Assets/tubustrunk.shader");
+                TubusTrunk = FShader.CreateShader(trunkShader.name, trunkShader);
+
+                if (TubusTrunk == null) Logger.LogError("TubusTrunk Shader is null!");
+                else Logger.LogInfo("TubusTrunk Shader loaded!");
 
                 IsInit = true;
             }

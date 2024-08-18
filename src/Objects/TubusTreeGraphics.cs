@@ -1,5 +1,8 @@
 ﻿
+using TubusTreeObject;
 using Unity.Mathematics;
+using UnityEngine;
+using static Tubus.Objects.TubusTreeGraphics;
 
 namespace Tubus.Objects
 {
@@ -24,12 +27,20 @@ namespace Tubus.Objects
             private List<Vertex[]> roots;
 
             public int firstSprite;
+            public int branchesStart;
+            public int rootStart;
+            public int bulbStart;
+            public int bulbs;
             public int totalSprites
             {
                 get
                 {
                     int sprites = 0;
-                    if (owner.DEBUGVIZ)
+                    if (!owner.DEBUGVIZ)
+                    {
+                        sprites += branches.Count + roots.Count + bulbs;
+                    }
+                    else
                     {
                         for (int i = 0; i < branches.Count; i++)
                         {
@@ -84,6 +95,7 @@ namespace Tubus.Objects
                     GenerateBranch();
                     numBranches++;
                 }
+                bulbs += branches.Count * 2;
             }
             private void InitRoots()
             {
@@ -91,6 +103,10 @@ namespace Tubus.Objects
                 int numRoots = 0;
                 int maxRoots = 3;
                 if (Random.value > 0.33f)
+                {
+                    maxRoots++;
+                }
+                if (Random.value > 0.80f)
                 {
                     maxRoots++;
                 }
@@ -107,12 +123,16 @@ namespace Tubus.Objects
                     GenerateRoot();
                     numRoots++;
                 }
+                bulbs += roots.Count;
             }
             private void GenerateBranch()
             {
                 List<Vertex> vertices = [];
-                int depth = Random.Range(-1, 2);
-                Vertex baseVert = new((float2)(Vector2)Random.onUnitSphere * 12f * Mathf.Pow(Random.value, 0.45f), 5f);
+                Vector3 sphere3 = Random.onUnitSphere * 12f;
+                Vector2 sphere2 = (Vector2)sphere3;
+                float rad = 6f;
+                Vertex baseVert = new((float2)sphere2 * Mathf.Pow(Random.value, 0.45f), rad);
+                int depth = sphere3.z > 5f ? 1 : sphere3.z < -5f ? -1 : 0;
                 baseVert.depth = depth;
                 baseVert.pos.y = Mathf.Abs(baseVert.pos.y);
                 vertices.Add(baseVert);
@@ -123,9 +143,10 @@ namespace Tubus.Objects
                 float spread = 0.8f;
                 for (int i = 0; i < segments; i++)
                 {
+                    rad /= Random.value + 1f;
                     float dir = Custom.Float2ToDeg(vertices[i].pos);
                     float vertDir = Mathf.Lerp(dir / 2f * -1f, dir / 2f, Random.value);
-                    Vertex vert = new(Custom.DegToFloat2(vertDir) * 5f + vertices[i].pos, 6f);
+                    Vertex vert = new(Custom.DegToFloat2(vertDir) * 5f + vertices[i].pos, rad);
                     vert.depth = depth;
                     vert.pos.y = Mathf.Abs(vert.pos.y);
                     vert.pos = Custom.MoveTowards(vert.pos, new Vector2(vert.pos.x * 6f, vert.pos.y * 2f), Random.Range(9f, 20f));
@@ -137,17 +158,15 @@ namespace Tubus.Objects
             private void GenerateRoot()
             {
                 List<Vertex> vertices = [];
-                int depth = Random.Range(-1, 2);
-                if (depth < 0 && Random.value > 0.5f)
-                {
-                    depth = Random.Range(0, 2);
-                }
-                Vector2 sphere = (Vector2)Random.onUnitSphere * 12f;
+                Vector3 sphere3 = Random.onUnitSphere * 12f;
+                Vector2 sphere2 = (Vector2)sphere3;
                 Vector2 smallSphere = (Vector2)Random.onUnitSphere * 6f;
-                smallSphere.x = Mathf.Abs(smallSphere.x) * Mathf.Sign(sphere.x);
-                smallSphere.y = Mathf.Abs(smallSphere.y) * Mathf.Sign(sphere.y);
-                sphere += smallSphere;
-                Vertex baseVert = new((float2)sphere * Mathf.Pow(Random.value, 0.45f), 5f);
+                smallSphere.x = Mathf.Abs(smallSphere.x) * Mathf.Sign(sphere3.x);
+                smallSphere.y = Mathf.Abs(smallSphere.y) * Mathf.Sign(sphere3.y);
+                sphere2 += smallSphere;
+                float rad = 7f;
+                Vertex baseVert = new((float2)sphere2 * Mathf.Pow(Random.value, 0.45f), rad);
+                int depth = sphere3.z > 6f ? 1 : sphere3.z < -5f ? -1 : 0;
                 baseVert.depth = depth;
                 baseVert.pos.y = -Mathf.Abs(baseVert.pos.y);
                 vertices.Add(baseVert);
@@ -160,9 +179,10 @@ namespace Tubus.Objects
                 float spread = 1f;
                 for (int i = 0; i < segments && segments < 5; i++)
                 {
+                    rad /= Random.value / 2f + 1f;
                     float dir = Custom.Float2ToDeg(vertices[i].pos);
                     float vertDir = Mathf.Lerp(dir / 1.75f * -1f, dir / 1.75f, Random.value);
-                    Vertex vert = new(Custom.DegToFloat2(vertDir) * 5f + vertices[i].pos, 6f);
+                    Vertex vert = new(Custom.DegToFloat2(vertDir) * 5f + vertices[i].pos, rad);
                     vert.depth = depth;
                     vert.pos.y = -Mathf.Abs(vert.pos.y);
                     vert.pos = Custom.MoveTowards(vert.pos, new Vector2(vert.pos.x * 6f, vert.pos.y), Random.Range(5f, 14f));
@@ -171,16 +191,15 @@ namespace Tubus.Objects
                     Vector2 groundPos = (Vector2)vert.pos + owner.tubusTree.origPos;
                     if (owner.tubusTree.room.GetTile(groundPos).Terrain != Room.Tile.TerrainType.Air && i > 2)
                     {
-                        vert.pos.y = owner.tubusTree.room.MiddleOfTile(groundPos).y + 10f;
                         break;
                     }
                     else
                     {
-                        if (owner.tubusTree.room.GetTile(owner.tubusTree.room.MiddleOfTile(groundPos + new Vector2(0f, 20f))).Terrain != Room.Tile.TerrainType.Air)
+                        if (owner.tubusTree.room.GetTile(owner.tubusTree.room.MiddleOfTile(groundPos + new Vector2(0f, 30f))).Terrain == Room.Tile.TerrainType.Air)
                         {
-                            vert.pos.y = owner.tubusTree.room.MiddleOfTile(groundPos - new Vector2(0f, 20f)).y;
+                            vert.pos.y -= down;
+                            down *= 2f;
                         }
-                        else down *= 3f;
                         spread -= 0.1f;
                         segments++;
                     }
@@ -202,9 +221,33 @@ namespace Tubus.Objects
                 }
                 return false;
             }
-            public void InitiateSprites(RoomCamera.SpriteLeaser sLeaser)
+            public void InitiateSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam)
             {
-                if (owner.DEBUGVIZ)
+                if (!owner.DEBUGVIZ)
+                {
+                    branchesStart = firstSprite;
+                    for (int i = 0; i < branches.Count; i++)
+                    {
+                        sLeaser.sprites[branchesStart + i] = TriangleMesh.MakeLongMesh(branches[i].Length - 1, false, false);
+                        sLeaser.sprites[branchesStart + i].shader = TubusPlugin.TubusTrunk;
+                        sLeaser.sprites[branchesStart + i].alpha = 0.8f;
+
+                    }
+                    rootStart = branchesStart + branches.Count;
+                    for (int i = 0; i < roots.Count; i++)
+                    {
+                        sLeaser.sprites[rootStart + i] = TriangleMesh.MakeLongMesh(roots[i].Length - 1, false, false);
+                        sLeaser.sprites[rootStart + i].shader = TubusPlugin.TubusTrunk;
+                        sLeaser.sprites[rootStart + i].alpha = 0.8f;
+                    }
+                    bulbStart = rootStart + roots.Count;
+                    for (int i = 0; i < bulbs; i++)
+                    {
+                        sLeaser.sprites[bulbStart + i] = new("Futile_White");
+                        sLeaser.sprites[bulbStart + i].shader = TubusPlugin.TubusTrunk;
+                    }
+                }
+                else
                 {
                     int index = firstSprite;
                     for (int i = 0; i < branches.Count; i++)
@@ -247,9 +290,75 @@ namespace Tubus.Objects
                     }
                 }
             }
-            public void DrawSprites(RoomCamera.SpriteLeaser sLeaser, Vector2 camPos)
+            public void DrawSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPos)
             {
-                if (owner.DEBUGVIZ)
+                if (!owner.DEBUGVIZ)
+                {
+                    Random.State state = Random.state;
+                    Random.InitState(owner.tubusTree.seed);
+                    Vector2 topChunkPos = owner.tubusTree.bodyChunks[1].pos;
+                    Vector2 mainChunkPos = owner.tubusTree.bodyChunks[0].pos;
+                    for (int i = 0; i < branches.Count; i++)
+                    {
+                        Vector2 rootPos = branches[i][0].pos;
+                        for (int j = 0; j < branches[i].Length - 1; j++)
+                        {
+                            if (j > 0) rootPos = branches[i][j - 1].pos;
+                            Vector2 branchPos = branches[i][j].pos;
+                            Vector2 nextBranchPos = branches[i][j + 1].pos;
+                            Vector2 normalized = (rootPos - nextBranchPos).normalized;
+                            Vector2 perpDir = Custom.PerpendicularVector(normalized);
+                            float branchRad = branches[i][j].rad * 1.8f;
+                            float otherBranchRad = branches[i][j + 1].rad * 1.8f;
+                            (sLeaser.sprites[branchesStart + i] as TriangleMesh).MoveVertice(j * 4, branchPos - perpDir * branchRad + normalized + topChunkPos - camPos);
+                            (sLeaser.sprites[branchesStart + i] as TriangleMesh).MoveVertice(j * 4 + 1, branchPos + perpDir * branchRad + normalized + topChunkPos - camPos);
+                            (sLeaser.sprites[branchesStart + i] as TriangleMesh).MoveVertice(j * 4 + 2, nextBranchPos - perpDir * otherBranchRad - normalized + topChunkPos - camPos);
+                            (sLeaser.sprites[branchesStart + i] as TriangleMesh).MoveVertice(j * 4 + 3, nextBranchPos + perpDir * otherBranchRad - normalized + topChunkPos - camPos);
+                        }
+                    }
+                    for (int i = 0; i < roots.Count; i++)
+                    {
+                        Vector2 mainPos = roots[i][0].pos;
+                        for (int j = 0; j < roots[i].Length - 1; j++)
+                        {
+                            if (j > 0) mainPos = roots[i][j - 1].pos;
+                            Vector2 rootPos = roots[i][j].pos;
+                            Vector2 nextRootPos = roots[i][j + 1].pos;
+                            Vector2 normalized = (mainPos - nextRootPos).normalized;
+                            Vector2 perpDir = Custom.PerpendicularVector(normalized);
+                            float rootRad = roots[i][j].rad * 1.5f;
+                            float otherRootRad = roots[i][j + 1].rad * 1.5f;
+                            (sLeaser.sprites[rootStart + i] as TriangleMesh).MoveVertice(j * 4, rootPos - perpDir * rootRad + normalized + mainChunkPos - camPos);
+                            (sLeaser.sprites[rootStart + i] as TriangleMesh).MoveVertice(j * 4 + 1, rootPos + perpDir * rootRad + normalized + mainChunkPos - camPos);
+                            (sLeaser.sprites[rootStart + i] as TriangleMesh).MoveVertice(j * 4 + 2, nextRootPos - perpDir * otherRootRad - normalized + mainChunkPos - camPos);
+                            (sLeaser.sprites[rootStart + i] as TriangleMesh).MoveVertice(j * 4 + 3, nextRootPos + perpDir * otherRootRad - normalized + mainChunkPos - camPos);
+                        }
+                    }
+                    for (int i = 0; i < branches.Count; i++)
+                    {
+                        sLeaser.sprites[bulbStart + i].SetPosition((Vector2)branches[i][0].pos + topChunkPos - camPos);
+                        sLeaser.sprites[bulbStart + i].rotation = Custom.VecToDeg(Custom.PerpendicularVector((Vector2)branches[i][0].pos, (Vector2)branches[i][1].pos));
+                        sLeaser.sprites[bulbStart + i].alpha = Random.value * 0.6f;
+                        sLeaser.sprites[bulbStart + i].scale = Random.value + 0.2f;
+                        sLeaser.sprites[bulbStart + i].scaleX = Random.value / 3f + 1f;
+
+                        sLeaser.sprites[bulbStart + i + branches.Count].SetPosition(Custom.MoveTowards((Vector2)branches[i][branches[i].Length - 1].pos, (Vector2)branches[i][branches[i].Length - 2].pos, 8f) + topChunkPos - camPos);
+                        sLeaser.sprites[bulbStart + i + branches.Count].rotation = Custom.VecToDeg(Custom.PerpendicularVector((Vector2)branches[i][branches[i].Length - 2].pos, (Vector2)branches[i][branches[i].Length - 1].pos));
+                        sLeaser.sprites[bulbStart + i + branches.Count].alpha = Random.value * 0.8f;
+                        sLeaser.sprites[bulbStart + i + branches.Count].scale = branches[i][branches[i].Length - 1].rad / 3f;
+                        sLeaser.sprites[bulbStart + i + branches.Count].scaleY = Random.value / 1.5f + 0.8f;
+                    }
+                    for (int i = 0; i < roots.Count; i++)
+                    {
+                        sLeaser.sprites[bulbStart + i + branches.Count * 2].SetPosition((Vector2)roots[i][0].pos + mainChunkPos - camPos);
+                        sLeaser.sprites[bulbStart + i + branches.Count * 2].rotation = Custom.VecToDeg(Custom.PerpendicularVector((Vector2)roots[i][0].pos, (Vector2)roots[i][1].pos));
+                        sLeaser.sprites[bulbStart + i + branches.Count * 2].alpha = Random.value * 0.6f;
+                        sLeaser.sprites[bulbStart + i + branches.Count * 2].scale = Random.value + 1f;
+                        sLeaser.sprites[bulbStart + i + branches.Count * 2].scaleX = Random.value / 2f + 1f;
+                    }
+                    Random.state = state;
+                }
+                else
                 {
                     int index = firstSprite;
                     for (int i = 0; i < branches.Count; i++)
@@ -293,7 +402,28 @@ namespace Tubus.Objects
             public void ApplyPalette(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, RoomPalette palette)
             {
                 // fade branches behind into fog color
-                if (owner.DEBUGVIZ)
+                if (!owner.DEBUGVIZ)
+                {
+                    //Color color = Color.red;
+                    //for (int i = 0; i < branches.Count; i++)
+                    //{
+                    //    Color.RGBToHSV(color, out var h, out var s, out var v);
+                    //    v = 0.8f;
+                    //    sLeaser.sprites[branchesStart + i].color = color;
+                    //    h += 0.2f;
+                    //    color = Color.HSVToRGB(h, s, v);
+                    //}
+                    //color = Color.red;
+                    //for (int i = 0; i < roots.Count; i++)
+                    //{
+                    //    Color.RGBToHSV(color, out var h, out var s, out var v);
+                    //    v = 0.8f;
+                    //    sLeaser.sprites[rootStart + i].color = color;
+                    //    h += 0.2f;
+                    //    color = Color.HSVToRGB(h, s, v);
+                    //}
+                }
+                else
                 {
                     int index = firstSprite;
                     Color color = Color.red;
@@ -364,7 +494,38 @@ namespace Tubus.Objects
             }
             public void AddToContainer(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam)
             {
-                if (owner.DEBUGVIZ)
+                if (!owner.DEBUGVIZ)
+                {
+                    for (int i = 0; i < branches.Count; i++)
+                    {
+                        if (branches[i][0].depth >= 0)
+                        {
+                            rCam.ReturnFContainer("Foreground").AddChild(sLeaser.sprites[bulbStart + i]);
+                            rCam.ReturnFContainer("Foreground").AddChild(sLeaser.sprites[branchesStart + i]);
+                            rCam.ReturnFContainer("Foreground").AddChild(sLeaser.sprites[bulbStart + i + branches.Count]);
+                        }
+                        else if (branches[i][0].depth < 0)
+                        {
+                            rCam.ReturnFContainer("Background").AddChild(sLeaser.sprites[bulbStart + i]);
+                            rCam.ReturnFContainer("Background").AddChild(sLeaser.sprites[branchesStart + i]);
+                            rCam.ReturnFContainer("Background").AddChild(sLeaser.sprites[bulbStart + i + branches.Count]);
+                        }
+                    }
+                    for (int i = 0; i < roots.Count; i++)
+                    {
+                        if (roots[i][0].depth >= 0) 
+                        {
+                            rCam.ReturnFContainer("Foreground").AddChild(sLeaser.sprites[bulbStart + i + branches.Count * 2]);
+                            rCam.ReturnFContainer("Foreground").AddChild(sLeaser.sprites[rootStart + i]);
+                        }
+                        else if (roots[i][0].depth < 0)
+                        { 
+                            rCam.ReturnFContainer("Background").AddChild(sLeaser.sprites[bulbStart + i + branches.Count * 2]);
+                            rCam.ReturnFContainer("Background").AddChild(sLeaser.sprites[rootStart + i]);
+                        }
+                    }
+                }
+                else
                 {
                     int index = firstSprite;
                     for (int i = 0; i < branches.Count; i++)
@@ -389,7 +550,7 @@ namespace Tubus.Objects
                     {
                         for (int j = 0; j < roots[i].Length; j++)
                         {
-                            if (roots[i][j].depth >= 0) rCam.ReturnFContainer("Foreground").AddChild(sLeaser.sprites[index]);
+                            if (roots[i][j].depth > 0) rCam.ReturnFContainer("Foreground").AddChild(sLeaser.sprites[index]);
                             else if (roots[i][j].depth < 0) rCam.ReturnFContainer("Background").AddChild(sLeaser.sprites[index]);
                             index++;
                         }
@@ -398,7 +559,7 @@ namespace Tubus.Objects
                     {
                         for (int j = 1; j < roots[i].Length; j++)
                         {
-                            if (roots[i][j - 1].depth >= 0) rCam.ReturnFContainer("Foreground").AddChild(sLeaser.sprites[index]);
+                            if (roots[i][j - 1].depth > 0) rCam.ReturnFContainer("Foreground").AddChild(sLeaser.sprites[index]);
                             else if (roots[i][j - 1].depth < 0) rCam.ReturnFContainer("Background").AddChild(sLeaser.sprites[index]);
                             index++;
                         }
@@ -413,13 +574,31 @@ namespace Tubus.Objects
         public TubusTreeGraphics(PhysicalObject ow) : base(ow, false)
         {
             tubusTree = ow as TubusTree;
-            DEBUGVIZ = true;
+            DEBUGVIZ = false;
         }
 
         public override void InitiateSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam)
         {
             branches = new(this);
-            if (DEBUGVIZ)
+            if (!DEBUGVIZ)
+            {
+                Random.State state = Random.state;
+                Random.InitState(tubusTree.seed);
+                sLeaser.sprites = new FSprite[2 + branches.totalSprites];
+                branches.firstSprite = 2;
+                sLeaser.sprites[0] = new FSprite("Futile_White");
+                sLeaser.sprites[1] = new FSprite("Futile_White");
+                sLeaser.sprites[0].shader = TubusPlugin.TubusTrunk;
+                sLeaser.sprites[1].shader = TubusPlugin.TubusTrunk;
+                sLeaser.sprites[0].alpha = Random.value * 0.3f + 0.2f;
+                sLeaser.sprites[1].alpha = Random.value * 0.5f + 0.3f;
+                sLeaser.sprites[0].scale = 2.2f;
+                sLeaser.sprites[1].scale = 1.7f;
+                Random.state = state;
+
+
+            }
+            else
             {
                 sLeaser.sprites = new FSprite[2 + branches.totalSprites];
                 sLeaser.sprites[0] = new FSprite("Circle20");
@@ -428,7 +607,7 @@ namespace Tubus.Objects
                 branches.firstSprite = 2;
             }
 
-            branches.InitiateSprites(sLeaser);
+            branches.InitiateSprites(sLeaser, rCam);
 
             AddToContainer(sLeaser, rCam, null);
         }
@@ -444,13 +623,18 @@ namespace Tubus.Objects
         public override void DrawSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPos)
         {
             base.DrawSprites(sLeaser, rCam, timeStacker, camPos);
-            if (DEBUGVIZ)
+            if (!DEBUGVIZ)
+            {
+                sLeaser.sprites[0].SetPosition(tubusTree.bodyChunks[0].pos - camPos);
+                sLeaser.sprites[1].SetPosition(tubusTree.bodyChunks[1].pos - camPos);
+            }
+            else
             {
                 sLeaser.sprites[0].SetPosition(tubusTree.bodyChunks[0].pos - camPos);
                 sLeaser.sprites[1].SetPosition(tubusTree.bodyChunks[1].pos - camPos);
             }
 
-            branches.DrawSprites(sLeaser, camPos);
+            branches.DrawSprites(sLeaser, rCam, timeStacker, camPos);
         }
         public override void ApplyPalette(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, RoomPalette palette)
         {
