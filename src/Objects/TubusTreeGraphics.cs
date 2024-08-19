@@ -14,7 +14,7 @@ namespace Tubus.Objects
             {
                 public float2 pos;
                 public float rad;
-                public int depth;
+                public float depth;
                 public Vertex(float2 p, float r)
                 {
                     pos = p;
@@ -132,7 +132,7 @@ namespace Tubus.Objects
                 Vector2 sphere2 = (Vector2)sphere3;
                 float rad = 6f;
                 Vertex baseVert = new((float2)sphere2 * Mathf.Pow(Random.value, 0.45f), rad);
-                int depth = sphere3.z > 5f ? 1 : sphere3.z < -5f ? -1 : 0;
+                float depth = Random.value * 0.15f * Mathf.Sign(sphere3.z);
                 baseVert.depth = depth;
                 baseVert.pos.y = Mathf.Abs(baseVert.pos.y);
                 vertices.Add(baseVert);
@@ -147,7 +147,7 @@ namespace Tubus.Objects
                     float dir = Custom.Float2ToDeg(vertices[i].pos);
                     float vertDir = Mathf.Lerp(dir / 2f * -1f, dir / 2f, Random.value);
                     Vertex vert = new(Custom.DegToFloat2(vertDir) * 5f + vertices[i].pos, rad);
-                    vert.depth = depth;
+                    vert.depth += (Random.value * 0.3f + 0.1f) * Mathf.Sign(depth) + depth;
                     vert.pos.y = Mathf.Abs(vert.pos.y);
                     vert.pos = Custom.MoveTowards(vert.pos, new Vector2(vert.pos.x * 6f, vert.pos.y * 2f), Random.Range(9f, 20f));
                     vert.pos.x = vert.pos.x * spread + Random.value;
@@ -166,7 +166,7 @@ namespace Tubus.Objects
                 sphere2 += smallSphere;
                 float rad = 7f;
                 Vertex baseVert = new((float2)sphere2 * Mathf.Pow(Random.value, 0.45f), rad);
-                int depth = sphere3.z > 6f ? 1 : sphere3.z < -5f ? -1 : 0;
+                float depth = Random.value * 0.15f * Mathf.Sign(sphere3.z);
                 baseVert.depth = depth;
                 baseVert.pos.y = -Mathf.Abs(baseVert.pos.y);
                 vertices.Add(baseVert);
@@ -183,7 +183,7 @@ namespace Tubus.Objects
                     float dir = Custom.Float2ToDeg(vertices[i].pos);
                     float vertDir = Mathf.Lerp(dir / 1.75f * -1f, dir / 1.75f, Random.value);
                     Vertex vert = new(Custom.DegToFloat2(vertDir) * 5f + vertices[i].pos, rad);
-                    vert.depth = depth;
+                    vert.depth += (Random.value * 0.3f + 0.1f) * Mathf.Sign(depth) + depth;
                     vert.pos.y = -Mathf.Abs(vert.pos.y);
                     vert.pos = Custom.MoveTowards(vert.pos, new Vector2(vert.pos.x * 6f, vert.pos.y), Random.Range(5f, 14f));
                     vert.pos.x = vert.pos.x * spread + Random.value;
@@ -228,15 +228,15 @@ namespace Tubus.Objects
                     branchesStart = firstSprite;
                     for (int i = 0; i < branches.Count; i++)
                     {
-                        sLeaser.sprites[branchesStart + i] = TriangleMesh.MakeLongMesh(branches[i].Length - 1, false, false);
+                        sLeaser.sprites[branchesStart + i] = TriangleMesh.MakeLongMesh(branches[i].Length - 1, false, true);
                         sLeaser.sprites[branchesStart + i].shader = TubusPlugin.TubusTrunk;
-                        sLeaser.sprites[branchesStart + i].alpha = 0.8f;
+                        sLeaser.sprites[branchesStart + i].alpha = 0.75f;
 
                     }
                     rootStart = branchesStart + branches.Count;
                     for (int i = 0; i < roots.Count; i++)
                     {
-                        sLeaser.sprites[rootStart + i] = TriangleMesh.MakeLongMesh(roots[i].Length - 1, false, false);
+                        sLeaser.sprites[rootStart + i] = TriangleMesh.MakeLongMesh(roots[i].Length - 1, false, true);
                         sLeaser.sprites[rootStart + i].shader = TubusPlugin.TubusTrunk;
                         sLeaser.sprites[rootStart + i].alpha = 0.8f;
                     }
@@ -314,6 +314,11 @@ namespace Tubus.Objects
                             (sLeaser.sprites[branchesStart + i] as TriangleMesh).MoveVertice(j * 4 + 1, branchPos + perpDir * branchRad + normalized + topChunkPos - camPos);
                             (sLeaser.sprites[branchesStart + i] as TriangleMesh).MoveVertice(j * 4 + 2, nextBranchPos - perpDir * otherBranchRad - normalized + topChunkPos - camPos);
                             (sLeaser.sprites[branchesStart + i] as TriangleMesh).MoveVertice(j * 4 + 3, nextBranchPos + perpDir * otherBranchRad - normalized + topChunkPos - camPos);
+                            for (int c = 0; c < 3; c++)
+                            {
+                                (sLeaser.sprites[branchesStart + i] as TriangleMesh).verticeColors[j * 3 + c] = new Color(branches[i][j].depth, 0f, 0f);
+                            }
+
                         }
                     }
                     for (int i = 0; i < roots.Count; i++)
@@ -332,29 +337,36 @@ namespace Tubus.Objects
                             (sLeaser.sprites[rootStart + i] as TriangleMesh).MoveVertice(j * 4 + 1, rootPos + perpDir * rootRad + normalized + mainChunkPos - camPos);
                             (sLeaser.sprites[rootStart + i] as TriangleMesh).MoveVertice(j * 4 + 2, nextRootPos - perpDir * otherRootRad - normalized + mainChunkPos - camPos);
                             (sLeaser.sprites[rootStart + i] as TriangleMesh).MoveVertice(j * 4 + 3, nextRootPos + perpDir * otherRootRad - normalized + mainChunkPos - camPos);
+                            for (int c = 0; c < 4; c++)
+                            {
+                                (sLeaser.sprites[rootStart + i] as TriangleMesh).verticeColors[j * 4 + c] = new Color(roots[i][j].depth, 0f, 0f);
+                            }
                         }
                     }
                     for (int i = 0; i < branches.Count; i++)
                     {
                         sLeaser.sprites[bulbStart + i].SetPosition((Vector2)branches[i][0].pos + topChunkPos - camPos);
-                        sLeaser.sprites[bulbStart + i].rotation = Custom.VecToDeg(Custom.PerpendicularVector((Vector2)branches[i][0].pos, (Vector2)branches[i][1].pos));
-                        sLeaser.sprites[bulbStart + i].alpha = Random.value * 0.6f;
+                        sLeaser.sprites[bulbStart + i].rotation = Custom.VecToDeg(Custom.PerpendicularVector((Vector2)branches[i][0].pos, (Vector2)branches[i][1].pos)) + 90f;
+                        sLeaser.sprites[bulbStart + i].alpha = 0.3f;
                         sLeaser.sprites[bulbStart + i].scale = Random.value + 0.2f;
                         sLeaser.sprites[bulbStart + i].scaleX = Random.value / 3f + 1f;
+                        sLeaser.sprites[bulbStart + i].color = new Color(branches[i][0].depth, 0f, 0f);
 
                         sLeaser.sprites[bulbStart + i + branches.Count].SetPosition(Custom.MoveTowards((Vector2)branches[i][branches[i].Length - 1].pos, (Vector2)branches[i][branches[i].Length - 2].pos, 8f) + topChunkPos - camPos);
-                        sLeaser.sprites[bulbStart + i + branches.Count].rotation = Custom.VecToDeg(Custom.PerpendicularVector((Vector2)branches[i][branches[i].Length - 2].pos, (Vector2)branches[i][branches[i].Length - 1].pos));
-                        sLeaser.sprites[bulbStart + i + branches.Count].alpha = Random.value * 0.8f;
+                        sLeaser.sprites[bulbStart + i + branches.Count].rotation = Custom.VecToDeg(Custom.PerpendicularVector((Vector2)branches[i][branches[i].Length - 2].pos, (Vector2)branches[i][branches[i].Length - 1].pos)) + 90f;
+                        sLeaser.sprites[bulbStart + i + branches.Count].alpha = 0.5f;
                         sLeaser.sprites[bulbStart + i + branches.Count].scale = branches[i][branches[i].Length - 1].rad / 3f;
                         sLeaser.sprites[bulbStart + i + branches.Count].scaleY = Random.value / 1.5f + 0.8f;
+                        sLeaser.sprites[bulbStart + i + branches.Count].color = new Color(branches[i][branches[i].Length - 1].depth, 0f, 0f);
                     }
                     for (int i = 0; i < roots.Count; i++)
                     {
                         sLeaser.sprites[bulbStart + i + branches.Count * 2].SetPosition((Vector2)roots[i][0].pos + mainChunkPos - camPos);
-                        sLeaser.sprites[bulbStart + i + branches.Count * 2].rotation = Custom.VecToDeg(Custom.PerpendicularVector((Vector2)roots[i][0].pos, (Vector2)roots[i][1].pos));
-                        sLeaser.sprites[bulbStart + i + branches.Count * 2].alpha = Random.value * 0.6f;
+                        sLeaser.sprites[bulbStart + i + branches.Count * 2].rotation = Custom.VecToDeg(Custom.PerpendicularVector((Vector2)roots[i][0].pos, (Vector2)roots[i][1].pos)) + 90f;
+                        sLeaser.sprites[bulbStart + i + branches.Count * 2].alpha = 0.4f;
                         sLeaser.sprites[bulbStart + i + branches.Count * 2].scale = Random.value + 1f;
                         sLeaser.sprites[bulbStart + i + branches.Count * 2].scaleX = Random.value / 2f + 1f;
+                        //sLeaser.sprites[bulbStart + i + branches.Count * 2].color = new Color(roots[i][0].depth, 0f, 0f);
                     }
                     Random.state = state;
                 }
@@ -404,24 +416,18 @@ namespace Tubus.Objects
                 // fade branches behind into fog color
                 if (!owner.DEBUGVIZ)
                 {
-                    //Color color = Color.red;
-                    //for (int i = 0; i < branches.Count; i++)
-                    //{
-                    //    Color.RGBToHSV(color, out var h, out var s, out var v);
-                    //    v = 0.8f;
-                    //    sLeaser.sprites[branchesStart + i].color = color;
-                    //    h += 0.2f;
-                    //    color = Color.HSVToRGB(h, s, v);
-                    //}
-                    //color = Color.red;
-                    //for (int i = 0; i < roots.Count; i++)
-                    //{
-                    //    Color.RGBToHSV(color, out var h, out var s, out var v);
-                    //    v = 0.8f;
-                    //    sLeaser.sprites[rootStart + i].color = color;
-                    //    h += 0.2f;
-                    //    color = Color.HSVToRGB(h, s, v);
-                    //}
+                    for (int i = 0; i < branches.Count; i++)
+                    {
+                        sLeaser.sprites[branchesStart + i].color = Color.black;
+                    }
+                    for (int i = 0; i < roots.Count; i++)
+                    {
+                        sLeaser.sprites[rootStart + i].color = Color.black;
+                    }
+                    for (int i = 0; i < bulbs; i++)
+                    {
+                        sLeaser.sprites[bulbStart + i].color = Color.black;
+                    }
                 }
                 else
                 {
@@ -500,9 +506,9 @@ namespace Tubus.Objects
                     {
                         if (branches[i][0].depth >= 0)
                         {
-                            rCam.ReturnFContainer("Foreground").AddChild(sLeaser.sprites[bulbStart + i]);
-                            rCam.ReturnFContainer("Foreground").AddChild(sLeaser.sprites[branchesStart + i]);
-                            rCam.ReturnFContainer("Foreground").AddChild(sLeaser.sprites[bulbStart + i + branches.Count]);
+                            rCam.ReturnFContainer("Items").AddChild(sLeaser.sprites[bulbStart + i]);
+                            rCam.ReturnFContainer("Items").AddChild(sLeaser.sprites[branchesStart + i]);
+                            rCam.ReturnFContainer("Items").AddChild(sLeaser.sprites[bulbStart + i + branches.Count]);
                         }
                         else if (branches[i][0].depth < 0)
                         {
@@ -515,8 +521,8 @@ namespace Tubus.Objects
                     {
                         if (roots[i][0].depth >= 0) 
                         {
-                            rCam.ReturnFContainer("Foreground").AddChild(sLeaser.sprites[bulbStart + i + branches.Count * 2]);
-                            rCam.ReturnFContainer("Foreground").AddChild(sLeaser.sprites[rootStart + i]);
+                            rCam.ReturnFContainer("Items").AddChild(sLeaser.sprites[bulbStart + i + branches.Count * 2]);
+                            rCam.ReturnFContainer("Items").AddChild(sLeaser.sprites[rootStart + i]);
                         }
                         else if (roots[i][0].depth < 0)
                         { 
@@ -587,12 +593,12 @@ namespace Tubus.Objects
                 sLeaser.sprites = new FSprite[2 + branches.totalSprites];
                 branches.firstSprite = 2;
                 sLeaser.sprites[0] = new FSprite("Futile_White");
-                sLeaser.sprites[1] = new FSprite("Futile_White");
                 sLeaser.sprites[0].shader = TubusPlugin.TubusTrunk;
-                sLeaser.sprites[1].shader = TubusPlugin.TubusTrunk;
-                sLeaser.sprites[0].alpha = Random.value * 0.3f + 0.2f;
-                sLeaser.sprites[1].alpha = Random.value * 0.5f + 0.3f;
+                sLeaser.sprites[0].alpha = 0.55f;
                 sLeaser.sprites[0].scale = 2.2f;
+                sLeaser.sprites[1] = new FSprite("Futile_White");
+                sLeaser.sprites[1].shader = TubusPlugin.TubusTrunk;
+                sLeaser.sprites[1].alpha = 0.4f;
                 sLeaser.sprites[1].scale = 1.7f;
                 Random.state = state;
 
@@ -613,7 +619,7 @@ namespace Tubus.Objects
         }
         public override void AddToContainer(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, FContainer newContatiner)
         {
-            newContatiner ??= rCam.ReturnFContainer("Midground");
+            newContatiner ??= rCam.ReturnFContainer("Items");
             foreach(var sprite in sLeaser.sprites)
             {
                 newContatiner.AddChild(sprite);
@@ -627,6 +633,7 @@ namespace Tubus.Objects
             {
                 sLeaser.sprites[0].SetPosition(tubusTree.bodyChunks[0].pos - camPos);
                 sLeaser.sprites[1].SetPosition(tubusTree.bodyChunks[1].pos - camPos);
+                sLeaser.sprites[1].rotation = Custom.VecToDeg(tubusTree.bodyChunks[0].Rotation);
             }
             else
             {
@@ -638,7 +645,8 @@ namespace Tubus.Objects
         }
         public override void ApplyPalette(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, RoomPalette palette)
         {
-            base.ApplyPalette(sLeaser, rCam, palette);
+            sLeaser.sprites[0].color = Color.black;
+            sLeaser.sprites[1].color = Color.black;
             branches.ApplyPalette(sLeaser, rCam, palette);
         }
         public override void Update()
