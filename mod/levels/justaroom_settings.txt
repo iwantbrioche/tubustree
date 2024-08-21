@@ -2,10 +2,10 @@ Template: NONE
 CeilingDrips: 0.173913
 WaveAmplitude: 0.09782609
 SecondWaveAmplitude: 0
-Clouds: 0.9130438
+Clouds: 0.8152177
 Grime: 0.6195652
-Palette: 17
-EffectColorA: 19
-PlacedObjects: DangleFruit><237.8394><551.3211><0~0~2~3, DangleFruit><264.8752><527.406><0~0~2~3, DangleFruit><286.4497><573.5106><0~0~2~3, Tubus Tree><362.9807><61.6991><21.99994~105~5978, Tubus Tree><863.8901><299.8574><100~50~1740, Tubus Tree><857.1267><59.84531><100~50~7065, Tubus Tree><764.0001><68><-64~183~10000, Tubus Tree><217><76><-64~183~7610, Lantern><105.9079><56.82246><0~0~4~9, SeedCob><572.6998><152.5054><0~0~7~10, Tubus Tree><290.3808><172.8394><100~50~436, 
-AmbientSounds: OMNI><AM_ENV-CityTone.ogg><726.6412><569.6417><0.1956502><1, OMNI><AM_RAIN-MehThunder.ogg><553.3981><551.1721><0.1847826><1, 
-FadePalette: 2, 0.7717393
+Palette: 2
+EffectColorA: 15
+PlacedObjects: DangleFruit><237.8394><551.3211><0~0~2~3, DangleFruit><264.8752><527.406><0~0~2~3, DangleFruit><286.4497><573.5106><0~0~2~3, Tubus Tree><357.9807><59.6991><21.99994~105~6629, Tubus Tree><630.8901><390.8574><100~50~8370, Tubus Tree><857.1267><59.84531><100~50~7065, Tubus Tree><762.0001><57><-64~183~10000, Tubus Tree><227><68><-64~183~4458, Lantern><696.9079><47.82246><0~0~4~9, SeedCob><572.6998><152.5054><0~0~7~10, Tubus Tree><436.3808><63.8394><100~50~436, Tubus Tree><467.3409><393.3787><100~50~4784, Tubus Tree><343><364><100~50~3045, Tubus Tree><205><355><-92~98~2502, CustomDecal><103.8594><62.16743><3~55~71~53~53~-20~92~89.99998~0~0.3478261~0.5434783~owlface~0.8043478~0.8695652~0.8043478~0.8695652~0.4347826~0.8695652~0.5217391~0.8695652, ClimbableRope><545.431><633.0623><6.103516E-05^-542, 
+AmbientSounds: OMNI><AM_ENV-CityTone.ogg><726.6412><569.6417><0.2717365><1, OMNI><AM_RAIN-MehThunder.ogg><553.3981><551.1721><0.1304348><1, 
+FadePalette: 5, 0.4130433

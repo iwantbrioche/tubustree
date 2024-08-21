@@ -99,9 +99,11 @@ Shader "Tubus/TubusTrunk"
 
                     trunkCol = lerp(tex2D(_PalTex, float2(2.5/32.0, 0.5/8.0)), trunkCol, tex2D(_PalTex, float2(29.5/32.0, 0.5/8.0)) + 0.3);
                     lineCol = lerp(tex2D(_PalTex, float2(2.5/32.0, 0.5/8.0)), lineCol, tex2D(_PalTex, float2(29.5/32.0, 0.5/8.0)) + 0.3);
+
+                    if (lineCol.r == 0.0 && lineCol.g == 0.0 && lineCol.b == 0.0) lineCol =tex2D(_PalTex, float2(2.5/32.0, 0.5/8.0));
+                    if (trunkCol.r == 0.0 && trunkCol.g == 0.0 && trunkCol.b == 0.0) trunkCol =tex2D(_PalTex, float2(2.5/32.0, 0.5/8.0));
                     
                     if (h < 0.65) return float4(lineCol.rgb, 1.0);
-
                     return float4(trunkCol.rgb, 1.0);
                 }
                 ENDCG
