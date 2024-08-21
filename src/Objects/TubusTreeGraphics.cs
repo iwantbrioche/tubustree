@@ -223,16 +223,8 @@ namespace Tubus.Objects
                     }
                     else
                     {
-                        if (room.GetTile(room.GetTilePosition(groundPos) - new IntVector2(0, 1)).Terrain == Room.Tile.TerrainType.Air)
-                        {
-                            vert.pos.y -= down;
-                            down *= 1.5f;
-                        }
-                        else
-                        {
-                            vert.pos.y -= down;
-                            down *= 2f;
-                        }
+                        vert.pos.y -= down;
+                        down *= room.GetTile(room.GetTilePosition(groundPos) - new IntVector2(0, 1)).Terrain == Room.Tile.TerrainType.Air ? 1.5f : 2f;
                         spread -= 0.1f;
                         segments++;
                     }
