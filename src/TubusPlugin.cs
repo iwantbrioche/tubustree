@@ -19,6 +19,7 @@ using System.Security.Permissions;
 using BepInEx.Logging;
 using System.Runtime.CompilerServices;
 using Tubus.PomObjects;
+using System.IO;
 
 #pragma warning disable CS0618
 
@@ -33,6 +34,7 @@ namespace TubusTreeObject
         public const string MOD_ID = "iwantbread.tubus";
         public const string MOD_NAME = "Tubus Tree";
         public const string MOD_VER = "1.0";
+        private const string ATLASES_DIR = "tubusAtlases";
         public static new ManualLogSource Logger { get; private set; }
         //public static TemplateRemix remix;
         private void OnEnable()
@@ -65,6 +67,8 @@ namespace TubusTreeObject
                 if (TubusTrunk == null) Logger.LogError("TubusTrunk Shader is null!");
                 else Logger.LogInfo("TubusTrunk Shader loaded!");
 
+                LoadAtlases();
+
                 IsInit = true;
             }
             catch (Exception ex)
@@ -92,6 +96,32 @@ namespace TubusTreeObject
                 Logger.LogError(ex);
                 throw;
             }
+        }
+
+        private static void LoadAtlases()
+        {
+            string[] atlasPaths = AssetManager.ListDirectory(ATLASES_DIR);
+            foreach(string filePath in atlasPaths)
+            {
+                if (Path.GetExtension(filePath) == ".txt")
+                {
+                    string atlasName = Path.GetFileNameWithoutExtension(filePath);
+                    try
+                    {
+                        Logger.LogDebug($"loading {ATLASES_DIR + Path.AltDirectorySeparatorChar + atlasName} atlas!");
+
+                        Futile.atlasManager.LoadAtlas(ATLASES_DIR + Path.AltDirectorySeparatorChar + atlasName);
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.LogError($"Error while loading {MOD_NAME} atlases!");
+                        Logger.LogError(ex);
+                        throw;
+                    }
+                }
+            }
+
+            Logger.LogInfo($"Loaded {MOD_NAME} atlases successfully!");
         }
 
     }

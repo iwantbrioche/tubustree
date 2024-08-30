@@ -45,7 +45,7 @@ namespace Tubus.Objects
             }
         }
         public AbstractTubusTree abstractTubus => abstractPhysicalObject as AbstractTubusTree;
-        public bool inAir;
+        private bool inAir;
         public int seed;
         public Vector2 origPos;
 

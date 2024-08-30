@@ -1,4 +1,5 @@
-﻿using static Pom.Pom;
+﻿
+using static Pom.Pom;
 
 namespace Tubus.PomObjects
 {

@@ -1,15 +1,13 @@
 ﻿
-using System.Reflection;
 using TubusTreeObject;
-using Unity.Mathematics;
 
 namespace Tubus.Objects
 {
     public class TubusTreeGraphics : GraphicsModule
     {
-        public class Limbs
+        private class Limbs
         {
-            public struct Branch
+            private struct Branch
             {
                 public struct Vertex
                 {
@@ -24,10 +22,36 @@ namespace Tubus.Objects
                 }
                 public struct Flower
                 {
+                    public struct Petal
+                    {
+                        public Vector2 pos;
+                        public float rotation;
+                        public Petal(Vector2 p, float r)
+                        {
+                            pos = p;
+                            rotation = r;
+                        }
+                    }
                     public Vector2 pos;
+                    public Petal[] auxPos;
+                    public int mainPetals = 2;
+                    public int auxPetals = 15;
+                    public int totalPetals
+                    {
+                        get
+                        {
+                            return mainPetals + auxPetals;
+                        }
+                    }
+                    public float size;
                     public Flower(Vector2 p)
                     {
                         pos = p;
+                        auxPos = new Petal[auxPetals];
+                    }
+                    public bool CollidingFlowers(Flower other)
+                    {
+                        return Custom.DistLess(pos, other.pos, Vector2.Distance(pos, other.pos));
                     }
                 }
 
@@ -69,13 +93,12 @@ namespace Tubus.Objects
             private List<Branch> branches;
             private List<Branch> roots;
             private Room room => owner.tubusTree.room;
-
             public int firstSprite;
-            public int branchesStart;
-            public int rootStart;
-            public int bulbStart;
-            public int flowerStart;
-            public int bulbs;
+            private int branchesStart;
+            private int rootStart;
+            private int bulbStart;
+            private int flowerStart;
+            private int bulbs;
             public int totalSprites
             {
                 get
@@ -83,7 +106,10 @@ namespace Tubus.Objects
                     int total = branches.Count + roots.Count + bulbs;
                     for (int i = 0; i < branches.Count; i++)
                     {
-                        total += branches[i].flowers.Count;
+                        for (int j = 0; j < branches[i].flowers.Count; j++)
+                        {
+                            total += branches[i].flowers[j].totalPetals;
+                        }
                     }
                     return total;
                 }
@@ -96,7 +122,7 @@ namespace Tubus.Objects
                 Random.InitState(ow.tubusTree.seed);
                 InitBranches();
                 InitRoots();
-                // TODO: make flowers not null ref when adding them
+                InitFlowers();
                 Random.state = state;
             }
             private void InitBranches()
@@ -104,10 +130,8 @@ namespace Tubus.Objects
                 branches = [];
                 int numBranches = 0;
                 int maxBranches = 3;
-                if (Random.value > 0.66f)
-                {
-                    maxBranches++;
-                }
+                if (Random.value > 0.66f) maxBranches++;
+
                 while (numBranches < maxBranches)
                 {
                     for (int i = 1; i < branches.Count; i++)
@@ -128,14 +152,8 @@ namespace Tubus.Objects
                 roots = [];
                 int numRoots = 0;
                 int maxRoots = 3;
-                if (Random.value > 0.33f)
-                {
-                    maxRoots++;
-                }
-                if (Random.value > 0.80f)
-                {
-                    maxRoots++;
-                }
+                if (Random.value > 0.33f) maxRoots++;
+                if (Random.value > 0.90f) maxRoots++;
                 while (numRoots < maxRoots)
                 {
                     for (int i = 1; i < roots.Count; i++)
@@ -150,6 +168,27 @@ namespace Tubus.Objects
                     numRoots++;
                 }
                 bulbs += roots.Count;
+            }
+            private void InitFlowers()
+            {
+                for (int i = 0; i < 1; i++)
+                {
+                    int numFlowers = 0;
+                    int maxFlowers = 1;
+                    while (numFlowers < maxFlowers)
+                    {
+                        for (int j = 1; j < branches[i].flowers.Count; j++)
+                        {
+                            if (branches[i].flowers[j - 1].CollidingFlowers(branches[i].flowers[j]))
+                            {
+                                branches[i].flowers.RemoveAt(j);
+                                numFlowers--;
+                            }
+                        }
+                        GenerateFlower(i);
+                        numFlowers++;
+                    }
+                }
             }
             private void GenerateBranch()
             {
@@ -232,6 +271,23 @@ namespace Tubus.Objects
                 }
                 roots.Add(new Branch(vertices));
             }
+            private void GenerateFlower(int branchIndex)
+            {
+                int vertIndex = branches[branchIndex].vertices.Count - 2;
+                Branch.Flower flower = new(branches[branchIndex].OnBranchPos(vertIndex, Random.value));
+                flower.pos += (Vector2)Random.onUnitSphere * branches[branchIndex].vertices[vertIndex].rad;
+                flower.size = 1f;
+                float angle = 360f / flower.auxPos.Length;
+                float currentAngle = angle;
+                for (int i = 0; i < flower.auxPos.Length; i++)
+                {
+                    flower.auxPos[i].pos = flower.pos + Custom.DegToVec(currentAngle) * 12f;
+                    flower.auxPos[i].rotation = currentAngle;
+                    currentAngle += angle;
+                }
+                branches[branchIndex].flowers.Add(flower);
+            }
+
             public void InitiateSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam)
             {
                 branchesStart = firstSprite;
@@ -255,11 +311,30 @@ namespace Tubus.Objects
                     sLeaser.sprites[bulbStart + i].shader = TubusPlugin.TubusTrunk;
                 }
                 flowerStart = bulbStart + bulbs;
+                int flowerIndex = flowerStart;
                 for (int i = 0; i < branches.Count; i++)
                 {
                     for (int j = 0; j < branches[i].flowers.Count; j++)
                     {
-                        sLeaser.sprites[flowerStart + j] = new("Futile_White");
+                        sLeaser.sprites[flowerIndex] = new("tubusMainPetal0");
+                        sLeaser.sprites[flowerIndex].scale = branches[i].flowers[j].size * 0.75f;
+                        flowerIndex++;
+
+                        sLeaser.sprites[flowerIndex] = new("tubusMainPetal0");
+                        sLeaser.sprites[flowerIndex].scale = branches[i].flowers[j].size * 0.75f;
+                        sLeaser.sprites[flowerIndex].rotation = 180f;
+
+                        flowerIndex++;
+
+                        int auxIndex = 0;
+                        for (int l = 2; l < branches[i].flowers[j].totalPetals; l++)
+                        {
+                            sLeaser.sprites[flowerIndex] = new("tubusAuxPetal0");
+                            sLeaser.sprites[flowerIndex].rotation = branches[i].flowers[j].auxPos[auxIndex].rotation;
+                            sLeaser.sprites[flowerIndex].scale = 0.5f;
+                            auxIndex++;
+                            flowerIndex++;
+                        }
                     }
                 }
             }
@@ -338,18 +413,32 @@ namespace Tubus.Objects
                     sLeaser.sprites[bulbStart + i + branches.Count * 2].scale = Random.value + 1.2f;
                     sLeaser.sprites[bulbStart + i + branches.Count * 2].scaleX = Random.value / 2f + 0.8f;
                 }
+                int flowerIndex = flowerStart;
                 for (int i = 0; i < branches.Count; i++)
                 {
                     for (int j = 0; j < branches[i].flowers.Count; j++)
                     {
-                        sLeaser.sprites[flowerStart + j].SetPosition(branches[i].flowers[j].pos - camPos);
+                        sLeaser.sprites[flowerIndex].SetPosition(branches[i].flowers[j].pos + topChunkPos + new Vector2(0f, 5f) - camPos);
+                        flowerIndex++;
+
+                        sLeaser.sprites[flowerIndex].SetPosition(branches[i].flowers[j].pos + topChunkPos - new Vector2(0f, 5f) - camPos);
+                        flowerIndex++;
+
+                        int auxIndex = 0;
+                        for (int l = 2; l < branches[i].flowers[j].totalPetals; l++)
+                        {
+                            sLeaser.sprites[flowerIndex].SetPosition(branches[i].flowers[j].auxPos[auxIndex].pos + topChunkPos - camPos);
+                            auxIndex++;
+                            flowerIndex++;
+                        }
                     }
                 }
                 Random.state = state;
             }
             public void ApplyPalette(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, RoomPalette palette)
             {
-
+                Random.State state = Random.state;
+                Random.InitState(owner.tubusTree.seed);
                 for (int i = 0; i < branches.Count; i++)
                 {
                     sLeaser.sprites[branchesStart + i].color = Color.black;
@@ -362,6 +451,19 @@ namespace Tubus.Objects
                 {
                     sLeaser.sprites[bulbStart + i].color = Color.black;
                 }
+                int flowerIndex = flowerStart;
+                for (int i = 0; i < branches.Count; i++)
+                {
+                    for (int j = 0; j < branches[i].flowers.Count; j++)
+                    {
+                        for (int l = 0; l < branches[i].flowers[j].totalPetals; l++)
+                        {
+                            sLeaser.sprites[flowerIndex].color = Custom.HSL2RGB(Random.value, 1f, 0.6f);
+                            flowerIndex++;
+                        }
+                    }
+                }
+                Random.state = state;
             }
             public void AddToContainer(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam)
             {
@@ -382,18 +484,23 @@ namespace Tubus.Objects
                         rCam.ReturnFContainer("Background").AddChild(sLeaser.sprites[rootStart + i]);
                     }
                 }
+                int flowerIndex = flowerStart;
                 for (int i = 0; i < branches.Count; i++)
                 {
                     for (int j = 0; j < branches[i].flowers.Count; j++)
                     {
-                        rCam.ReturnFContainer("Items").AddChild(sLeaser.sprites[flowerStart + j]);
+                        for (int l = 0; l < branches[i].flowers[j].totalPetals; l++)
+                        {
+                            rCam.ReturnFContainer("Items").AddChild(sLeaser.sprites[flowerIndex]);
+                            flowerIndex++;
+                        }
                     }
                 }
             }
 
         }
         public TubusTree tubusTree;
-        public Limbs limbs;
+        private Limbs limbs;
         public TubusTreeGraphics(PhysicalObject ow) : base(ow, false)
         {
             tubusTree = ow as TubusTree;
