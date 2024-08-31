@@ -45,7 +45,7 @@ namespace Tubus.Objects
                         }
                     }
                     public float size;
-                    public float rotation;
+                    public Vector2 rotation;
                     public Flower(Vector2 p)
                     {
                         pos = p;
@@ -174,7 +174,7 @@ namespace Tubus.Objects
             }
             private void InitFlowers()
             {
-                for (int i = 0; i < 1; i++)
+                for (int i = 0; i < branches.Count; i++)
                 {
                     int numFlowers = 0;
                     int maxFlowers = 1;
@@ -279,22 +279,37 @@ namespace Tubus.Objects
                 int vertIndex = branches[branchIndex].vertices.Count - 2;
                 Branch.Flower flower = new(branches[branchIndex].OnBranchPos(vertIndex, Random.value));
                 flower.pos += (Vector2)Random.onUnitSphere * branches[branchIndex].vertices[vertIndex].rad;
-                flower.size = Random.value * 0.5f + 0.5f;
+                // Places the flower at a random position on the branch, then moves the position to a random point on a sphere multiplied by the radius of the branch vertex
+                flower.size = Random.value * 0.4f + 0.5f;
+                flower.rotation = new Vector2(Mathf.Lerp(-30f, 30f, Random.value), Mathf.Lerp(-30f, 30f, Random.value));
                 float petalAngle = 360f / flower.innerRing.Length;
                 float currentAngle = petalAngle;
                 for (int i = 0; i < flower.innerRing.Length; i++)
                 {
-                    flower.innerRing[i].pos = flower.pos + Custom.DegToVec(currentAngle) * 6f * flower.size;
-                    flower.innerRing[i].rotation = currentAngle;
+                    float rad = currentAngle * -Mathf.PI / 180f;
+                    float xAxis = flower.rotation.x * -Mathf.PI / 180f;
+                    float yAxis = flower.rotation.y * -Mathf.PI / 180f;
+                    Vector2 rotPos = new(Mathf.Cos(rad - yAxis) - Mathf.Sin(rad - xAxis), Mathf.Sin(rad + yAxis) + Mathf.Cos(rad + xAxis));
+                    // Rotation code from https://github.com/jakelazaroff/til/blob/main/math/rotate-a-point-around-a-circle.md
+
+                    flower.innerRing[i].pos = flower.pos + rotPos * 6f * flower.size;
+                    flower.innerRing[i].rotation = Custom.VecToDeg(rotPos);
                     currentAngle += petalAngle;
+
+
                 }
 
                 petalAngle = 360f / flower.outerRing.Length;
                 currentAngle = petalAngle;
                 for (int i = 0; i < flower.outerRing.Length; i++)
                 {
-                    flower.outerRing[i].pos = flower.pos + Custom.DegToVec(currentAngle + petalAngle * 0.5f) * 10f * flower.size;
-                    flower.outerRing[i].rotation = currentAngle;
+                    float rad = (currentAngle + petalAngle * 0.5f) * -Mathf.PI / 180f;
+                    float xAxis = flower.rotation.x * -Mathf.PI / 180f;
+                    float yAxis = flower.rotation.y * -Mathf.PI / 180f;
+                    Vector2 rotPos = new(Mathf.Cos(rad - yAxis) - Mathf.Sin(rad - xAxis), Mathf.Sin(rad + yAxis) + Mathf.Cos(rad + xAxis));
+
+                    flower.outerRing[i].pos = flower.pos + rotPos * 10f * flower.size;
+                    flower.outerRing[i].rotation = Custom.VecToDeg(rotPos);
                     currentAngle += petalAngle;
                 }
                 branches[branchIndex].flowers.Add(flower);
@@ -352,11 +367,13 @@ namespace Tubus.Objects
 
                         sLeaser.sprites[flowerIndex] = new("tubusMainPetal0");
                         sLeaser.sprites[flowerIndex].scale = branches[i].flowers[j].size * 0.75f;
+                        sLeaser.sprites[flowerIndex].isVisible = false;
                         flowerIndex++;
 
                         sLeaser.sprites[flowerIndex] = new("tubusMainPetal0");
                         sLeaser.sprites[flowerIndex].scale = branches[i].flowers[j].size * 0.75f;
                         sLeaser.sprites[flowerIndex].rotation = 180f;
+                        sLeaser.sprites[flowerIndex].isVisible = false;
                         flowerIndex++;
                     }
                 }
@@ -455,14 +472,21 @@ namespace Tubus.Objects
                             interPetals++;
                             flowerIndex++;
                         }
+                        int spriteAngle = Mathf.RoundToInt(Mathf.Abs(branches[i].flowers[j].rotation.x / 35f));
+
                         sLeaser.sprites[flowerIndex].SetPosition(branches[i].flowers[j].pos + topChunkPos - camPos);
+                        sLeaser.sprites[flowerIndex].element = Futile.atlasManager.GetElementWithName("tubusMainPetal" + spriteAngle);
                         flowerIndex++;
 
-                        sLeaser.sprites[flowerIndex].SetPosition(branches[i].flowers[j].pos + topChunkPos + new Vector2(0f, 4.5f * branches[i].flowers[j].size) - camPos);
+                        sLeaser.sprites[flowerIndex].SetPosition(branches[i].flowers[j].pos + new Vector2(0f, 4.5f * branches[i].flowers[j].size) + topChunkPos - camPos);
+                        sLeaser.sprites[flowerIndex].rotation = Custom.VecToDeg(-branches[i].flowers[j].rotation);
+                        sLeaser.sprites[flowerIndex].element = Futile.atlasManager.GetElementWithName("tubusMainPetal" + spriteAngle);
                         flowerIndex++;
 
-                        sLeaser.sprites[flowerIndex].SetPosition(branches[i].flowers[j].pos + topChunkPos - new Vector2(0f, 4.5f * branches[i].flowers[j].size) - camPos);
-                        flowerIndex++;
+                        sLeaser.sprites[flowerIndex].SetPosition(branches[i].flowers[j].pos - new Vector2(0f, 4.5f * branches[i].flowers[j].size) + topChunkPos - camPos);
+                        sLeaser.sprites[flowerIndex].rotation = Custom.VecToDeg(-branches[i].flowers[j].rotation) + 180f;
+                        sLeaser.sprites[flowerIndex].element = Futile.atlasManager.GetElementWithName("tubusMainPetal" + spriteAngle);
+                        flowerIndex++; 
                     }
                 }
                 Random.state = state;
