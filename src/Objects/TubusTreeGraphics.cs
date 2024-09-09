@@ -35,22 +35,21 @@ namespace Tubus.Objects
                     public Vector2 pos;
                     public Petal[] innerRing;
                     public Petal[] outerRing;
-                    public int innerPetals = 12;
-                    public int outerPetals = 15;
                     public int totalPetals
                     {
                         get
                         {
-                            return 3 + innerPetals + outerPetals;
+                            return 3 + innerRing.Length + outerRing.Length;
                         }
                     }
                     public float size;
                     public Vector2 rotation;
-                    public Flower(Vector2 p)
+                    public Flower(Vector2 p, float s, int extraPetals)
                     {
                         pos = p;
-                        innerRing = new Petal[innerPetals];
-                        outerRing = new Petal[outerPetals];
+                        size = s;
+                        innerRing = new Petal[5 + extraPetals];
+                        outerRing = new Petal[9 + extraPetals];
                     }
                     public bool CollidingFlowers(Flower other)
                     {
@@ -121,12 +120,9 @@ namespace Tubus.Objects
             public Limbs(TubusTreeGraphics ow)
             {
                 owner = ow;
-                Random.State state = Random.state;
-                Random.InitState(ow.tubusTree.seed);
                 InitBranches();
                 InitRoots();
                 InitFlowers();
-                Random.state = state;
             }
             private void InitBranches()
             {
@@ -178,7 +174,11 @@ namespace Tubus.Objects
                 {
                     int numFlowers = 0;
                     int maxFlowers = 1;
-                    while (numFlowers < maxFlowers)
+                    if (Random.value > 0.75f) maxFlowers--;
+
+                    float sizeMult = 1f;
+                    int tries = 0;
+                    while (numFlowers < maxFlowers && tries <= 6)
                     {
                         for (int j = 1; j < branches[i].flowers.Count; j++)
                         {
@@ -186,10 +186,28 @@ namespace Tubus.Objects
                             {
                                 branches[i].flowers.RemoveAt(j);
                                 numFlowers--;
+                                tries++;
                             }
                         }
-                        GenerateFlower(i);
+
+                        GenerateFlower(i, sizeMult);
+                        if (sizeMult > 0.4f) sizeMult -= 0.1f;
                         numFlowers++;
+                    }
+                    for (int l = 0; l < branches.Count; l++)
+                    {
+                        if (i == l) continue;
+
+                        for (int m = 0; m < branches[l].flowers.Count; m++)
+                        {
+                            for (int j = 0; j < branches[i].flowers.Count; j++)
+                            {
+                                if (branches[i].flowers[j].CollidingFlowers(branches[l].flowers[m]))
+                                {
+                                    branches[i].flowers.RemoveAt(j);
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -274,14 +292,14 @@ namespace Tubus.Objects
                 }
                 roots.Add(new Branch(vertices));
             }
-            private void GenerateFlower(int branchIndex)
+            private void GenerateFlower(int branchIndex, float sizeMult)
             {
-                int vertIndex = branches[branchIndex].vertices.Count - 2;
-                Branch.Flower flower = new(branches[branchIndex].OnBranchPos(vertIndex, Random.value));
-                flower.pos += (Vector2)Random.onUnitSphere * branches[branchIndex].vertices[vertIndex].rad;
+                int vertIndex = Random.Range(branches[branchIndex].vertices.Count - 2, branches[branchIndex].vertices.Count - 1);
+                Branch.Flower flower = new(branches[branchIndex].OnBranchPos(vertIndex, Random.value * 0.4f + 0.6f), (Random.value * 0.5f + 0.5f) * sizeMult, Random.Range(-1, 4));
+                Vector2 facingAngle = (Vector2)Random.onUnitSphere * branches[branchIndex].vertices[vertIndex].rad;
+                flower.pos += facingAngle;
                 // Places the flower at a random position on the branch, then moves the position to a random point on a sphere multiplied by the radius of the branch vertex
-                flower.size = Random.value * 0.4f + 0.5f;
-                flower.rotation = new Vector2(Mathf.Lerp(-30f, 30f, Random.value), Mathf.Lerp(-30f, 30f, Random.value));
+                flower.rotation = new Vector2(Random.Range(0f, 30f), Random.Range(0f, 30f)) * Mathf.Sign(Custom.VecToDeg(facingAngle));
                 float petalAngle = 360f / flower.innerRing.Length;
                 float currentAngle = petalAngle;
                 for (int i = 0; i < flower.innerRing.Length; i++)
@@ -292,11 +310,9 @@ namespace Tubus.Objects
                     Vector2 rotPos = new(Mathf.Cos(rad - yAxis) - Mathf.Sin(rad - xAxis), Mathf.Sin(rad + yAxis) + Mathf.Cos(rad + xAxis));
                     // Rotation code from https://github.com/jakelazaroff/til/blob/main/math/rotate-a-point-around-a-circle.md
 
-                    flower.innerRing[i].pos = flower.pos + rotPos * 6f * flower.size;
-                    flower.innerRing[i].rotation = Custom.VecToDeg(rotPos);
+                    flower.innerRing[i].pos = flower.pos + rotPos * 2f * flower.size;
+                    flower.innerRing[i].rotation = currentAngle;
                     currentAngle += petalAngle;
-
-
                 }
 
                 petalAngle = 360f / flower.outerRing.Length;
@@ -308,13 +324,12 @@ namespace Tubus.Objects
                     float yAxis = flower.rotation.y * -Mathf.PI / 180f;
                     Vector2 rotPos = new(Mathf.Cos(rad - yAxis) - Mathf.Sin(rad - xAxis), Mathf.Sin(rad + yAxis) + Mathf.Cos(rad + xAxis));
 
-                    flower.outerRing[i].pos = flower.pos + rotPos * 10f * flower.size;
-                    flower.outerRing[i].rotation = Custom.VecToDeg(rotPos);
+                    flower.outerRing[i].pos = flower.pos + rotPos * 2f * flower.size;
+                    flower.outerRing[i].rotation = currentAngle;
                     currentAngle += petalAngle;
                 }
                 branches[branchIndex].flowers.Add(flower);
             }
-
             public void InitiateSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam)
             {
                 branchesStart = firstSprite;
@@ -343,37 +358,54 @@ namespace Tubus.Objects
                 {
                     for (int j = 0; j < branches[i].flowers.Count; j++)
                     {
-                        int outerPetals = 0;
-                        for (int l = 0; l < branches[i].flowers[j].outerPetals; l++)
+                        for (int l = 0; l < branches[i].flowers[j].outerRing.Length; l++)
                         {
-                            sLeaser.sprites[flowerIndex] = new("tubusAuxPetal0");
-                            sLeaser.sprites[flowerIndex].rotation = branches[i].flowers[j].outerRing[outerPetals].rotation;
-                            sLeaser.sprites[flowerIndex].scale = 0.55f * branches[i].flowers[j].size;
-                            outerPetals++;
+                            sLeaser.sprites[flowerIndex] = new("LizardLowerTeeth3.2");
+                            sLeaser.sprites[flowerIndex].rotation = branches[i].flowers[j].outerRing[l].rotation;
+                            sLeaser.sprites[flowerIndex].scale = 0.45f * branches[i].flowers[j].size;
+                            sLeaser.sprites[flowerIndex].scaleY *= Mathf.Clamp(Mathf.Abs(branches[i].flowers[j].outerRing[l].rotation / Custom.VecToDeg(branches[i].flowers[j].rotation)), 1f, 1.6f);
+                            sLeaser.sprites[flowerIndex].scaleX *= 1.25f;
                             flowerIndex++;
                         }
-                        int innerPetals = 0;
-                        for (int l = 0; l < branches[i].flowers[j].innerPetals; l++)
+                        for (int l = 0; l < branches[i].flowers[j].innerRing.Length; l++)
                         {
-                            sLeaser.sprites[flowerIndex] = new("tubusAuxPetal0");
-                            sLeaser.sprites[flowerIndex].rotation = branches[i].flowers[j].innerRing[innerPetals].rotation;
-                            sLeaser.sprites[flowerIndex].scale = 0.75f * branches[i].flowers[j].size;
-                            innerPetals++;
+                            sLeaser.sprites[flowerIndex] = new("LizardLowerTeeth3.2");
+                            sLeaser.sprites[flowerIndex].rotation = branches[i].flowers[j].innerRing[l].rotation;
+                            sLeaser.sprites[flowerIndex].scale = 0.35f * branches[i].flowers[j].size;
+                            sLeaser.sprites[flowerIndex].scaleX *= 1.2f;
                             flowerIndex++;
                         }
+                        float flowerRot = Custom.VecToDeg(branches[i].flowers[j].rotation);
+
                         sLeaser.sprites[flowerIndex] = new("Circle20");
+                        sLeaser.sprites[flowerIndex].scale = branches[i].flowers[j].size * 0.55f;
+                        sLeaser.sprites[flowerIndex].rotation = flowerRot;
+                        flowerIndex++;
+
+                        sLeaser.sprites[flowerIndex] = new("tubusMainPetal0");
+                        sLeaser.sprites[flowerIndex].scale = branches[i].flowers[j].size * 0.55f;
+                        sLeaser.sprites[flowerIndex].rotation = flowerRot;
+                        if (branches[i].flowers[j].rotation.y > 0f)
+                        {
+                            sLeaser.sprites[flowerIndex].scaleY = sLeaser.sprites[flowerIndex].scale * 1f + (0.25f * (Mathf.Abs(branches[i].flowers[j].rotation.y) / 30f));
+                        }
+                        else
+                        {
+                            sLeaser.sprites[flowerIndex].scaleY = sLeaser.sprites[flowerIndex].scale * 0.4f + (0.35f * (Mathf.Abs(branches[i].flowers[j].rotation.y) / 30f));
+                        }
+                        flowerIndex++;
+
+                        sLeaser.sprites[flowerIndex] = new("tubusMainPetal0");
                         sLeaser.sprites[flowerIndex].scale = branches[i].flowers[j].size * 0.5f;
-                        flowerIndex++;
-
-                        sLeaser.sprites[flowerIndex] = new("tubusMainPetal0");
-                        sLeaser.sprites[flowerIndex].scale = branches[i].flowers[j].size * 0.75f;
-                        sLeaser.sprites[flowerIndex].isVisible = false;
-                        flowerIndex++;
-
-                        sLeaser.sprites[flowerIndex] = new("tubusMainPetal0");
-                        sLeaser.sprites[flowerIndex].scale = branches[i].flowers[j].size * 0.75f;
-                        sLeaser.sprites[flowerIndex].rotation = 180f;
-                        sLeaser.sprites[flowerIndex].isVisible = false;
+                        sLeaser.sprites[flowerIndex].rotation = flowerRot + 180f;
+                        if (branches[i].flowers[j].rotation.y > 0f)
+                        {
+                            sLeaser.sprites[flowerIndex].scaleY = sLeaser.sprites[flowerIndex].scale * 0.4f + (0.35f * (Mathf.Abs(branches[i].flowers[j].rotation.y) / 30f));
+                        }
+                        else
+                        {
+                            sLeaser.sprites[flowerIndex].scaleY = sLeaser.sprites[flowerIndex].scale * 1f + (0.25f * (Mathf.Abs(branches[i].flowers[j].rotation.y) / 30f));
+                        }
                         flowerIndex++;
                     }
                 }
@@ -386,13 +418,13 @@ namespace Tubus.Objects
                 Vector2 mainChunkPos = owner.tubusTree.firstChunk.pos;
                 for (int i = 0; i < branches.Count; i++)
                 {
-                    Vector2 rootPos = branches[i].vertices[0].pos;
+                    Vector2 mainPos = branches[i].vertices[0].pos;
                     for (int j = 0; j < branches[i].vertices.Count - 1; j++)
                     {
-                        if (j > 0) rootPos = branches[i].vertices[j - 1].pos;
+                        if (j > 0) mainPos = branches[i].vertices[j - 1].pos;
                         Vector2 branchPos = branches[i].vertices[j].pos;
                         Vector2 nextBranchPos = branches[i].vertices[j + 1].pos;
-                        Vector2 normalized = (rootPos - nextBranchPos).normalized;
+                        Vector2 normalized = (mainPos - nextBranchPos).normalized;
                         Vector2 perpDir = Custom.PerpendicularVector(normalized);
                         float branchRad = branches[i].vertices[j].rad * 1.8f;
                         float otherBranchRad = branches[i].vertices[j + 1].rad * 1.8f;
@@ -419,10 +451,10 @@ namespace Tubus.Objects
                         Vector2 perpDir = Custom.PerpendicularVector(normalized);
                         float rootRad = roots[i].vertices[j].rad * 1.5f;
                         float otherRootRad = roots[i].vertices[j + 1].rad * 1.5f;
-                        (sLeaser.sprites[rootStart + i] as TriangleMesh).MoveVertice(j * 4, rootPos - perpDir * rootRad + normalized + mainChunkPos - camPos);
-                        (sLeaser.sprites[rootStart + i] as TriangleMesh).MoveVertice(j * 4 + 1, rootPos + perpDir * rootRad + normalized + mainChunkPos - camPos);
-                        (sLeaser.sprites[rootStart + i] as TriangleMesh).MoveVertice(j * 4 + 2, nextRootPos - perpDir * otherRootRad - normalized + mainChunkPos - camPos);
-                        (sLeaser.sprites[rootStart + i] as TriangleMesh).MoveVertice(j * 4 + 3, nextRootPos + perpDir * otherRootRad - normalized + mainChunkPos - camPos);
+                        (sLeaser.sprites[rootStart + i] as TriangleMesh).MoveVertice(j * 4, rootPos - perpDir * rootRad + normalized + mainChunkPos - camPos); // 0, 4, 8
+                        (sLeaser.sprites[rootStart + i] as TriangleMesh).MoveVertice(j * 4 + 1, rootPos + perpDir * rootRad + normalized + mainChunkPos - camPos); // 1, 5, 9
+                        (sLeaser.sprites[rootStart + i] as TriangleMesh).MoveVertice(j * 4 + 2, nextRootPos - perpDir * otherRootRad - normalized + mainChunkPos - camPos); // 2, 6, 10
+                        (sLeaser.sprites[rootStart + i] as TriangleMesh).MoveVertice(j * 4 + 3, nextRootPos + perpDir * otherRootRad - normalized + mainChunkPos - camPos); // 3, 7, 11
                         for (int c = 0; c < 4; c++)
                         {
                             (sLeaser.sprites[rootStart + i] as TriangleMesh).verticeColors[j * 4 + c] = new Color(roots[i].vertices[j].depth, 0f, 0f);
@@ -458,34 +490,25 @@ namespace Tubus.Objects
                 {
                     for (int j = 0; j < branches[i].flowers.Count; j++)
                     {
-                        int outerPetals = 0;
-                        for (int l = 0; l < branches[i].flowers[j].outerPetals; l++)
+                        for (int l = 0; l < branches[i].flowers[j].outerRing.Length; l++)
                         {
-                            sLeaser.sprites[flowerIndex].SetPosition(branches[i].flowers[j].outerRing[outerPetals].pos + topChunkPos - camPos);
-                            outerPetals++;
+                            sLeaser.sprites[flowerIndex].SetPosition(branches[i].flowers[j].outerRing[l].pos + topChunkPos - camPos);
                             flowerIndex++;
                         }
-                        int interPetals = 0;
-                        for (int l = 0; l < branches[i].flowers[j].innerPetals; l++)
+                        for (int l = 0; l < branches[i].flowers[j].innerRing.Length; l++)
                         {
-                            sLeaser.sprites[flowerIndex].SetPosition(branches[i].flowers[j].innerRing[interPetals].pos + topChunkPos - camPos);
-                            interPetals++;
+                            sLeaser.sprites[flowerIndex].SetPosition(branches[i].flowers[j].innerRing[l].pos + topChunkPos - camPos);
                             flowerIndex++;
                         }
-                        int spriteAngle = Mathf.RoundToInt(Mathf.Abs(branches[i].flowers[j].rotation.x / 35f));
+                        float flowerRot = Custom.VecToDeg(branches[i].flowers[j].rotation);
 
                         sLeaser.sprites[flowerIndex].SetPosition(branches[i].flowers[j].pos + topChunkPos - camPos);
-                        sLeaser.sprites[flowerIndex].element = Futile.atlasManager.GetElementWithName("tubusMainPetal" + spriteAngle);
                         flowerIndex++;
 
-                        sLeaser.sprites[flowerIndex].SetPosition(branches[i].flowers[j].pos + new Vector2(0f, 4.5f * branches[i].flowers[j].size) + topChunkPos - camPos);
-                        sLeaser.sprites[flowerIndex].rotation = Custom.VecToDeg(-branches[i].flowers[j].rotation);
-                        sLeaser.sprites[flowerIndex].element = Futile.atlasManager.GetElementWithName("tubusMainPetal" + spriteAngle);
+                        sLeaser.sprites[flowerIndex].SetPosition(branches[i].flowers[j].pos + Custom.RotateAroundOrigo(new Vector2(0f, 3.7f * branches[i].flowers[j].size), flowerRot) + topChunkPos - camPos);
                         flowerIndex++;
 
-                        sLeaser.sprites[flowerIndex].SetPosition(branches[i].flowers[j].pos - new Vector2(0f, 4.5f * branches[i].flowers[j].size) + topChunkPos - camPos);
-                        sLeaser.sprites[flowerIndex].rotation = Custom.VecToDeg(-branches[i].flowers[j].rotation) + 180f;
-                        sLeaser.sprites[flowerIndex].element = Futile.atlasManager.GetElementWithName("tubusMainPetal" + spriteAngle);
+                        sLeaser.sprites[flowerIndex].SetPosition(branches[i].flowers[j].pos - Custom.RotateAroundOrigo(new Vector2(0f, 3.7f * branches[i].flowers[j].size), flowerRot) + topChunkPos - camPos);
                         flowerIndex++; 
                     }
                 }
@@ -512,12 +535,12 @@ namespace Tubus.Objects
                 {
                     for (int j = 0; j < branches[i].flowers.Count; j++)
                     {
-                        for (int l = 0; l < branches[i].flowers[j].outerPetals; l++)
+                        for (int l = 0; l < branches[i].flowers[j].outerRing.Length; l++)
                         {
                             sLeaser.sprites[flowerIndex].color = Custom.HSL2RGB(0.8f, 0.6f, 0.6f);
                             flowerIndex++;
                         }
-                        for (int l = 0; l < branches[i].flowers[j].innerPetals; l++)
+                        for (int l = 0; l < branches[i].flowers[j].innerRing.Length; l++)
                         {
                             sLeaser.sprites[flowerIndex].color = Custom.HSL2RGB(0.5f, 0.6f, 0.6f);
                             flowerIndex++;
@@ -553,21 +576,21 @@ namespace Tubus.Objects
                         rCam.ReturnFContainer("Background").AddChild(sLeaser.sprites[rootStart + i]);
                     }
                 }
-                int flowerIndex = flowerStart;
-                for (int i = 0; i < branches.Count; i++)
-                {
-                    if (branches[i].vertices[0].depth < 0)
-                    {
-                        for (int j = 0; j < branches[i].flowers.Count; j++)
-                        {
-                            for (int l = 0; l < branches[i].flowers[j].totalPetals; l++)
-                            {
-                                rCam.ReturnFContainer("Background").AddChild(sLeaser.sprites[flowerIndex]);
-                                flowerIndex++;
-                            }
-                        }
-                    }
-                }
+                //int flowerIndex = flowerStart;
+                //for (int i = 0; i < branches.Count; i++)
+                //{
+                //    if (branches[i].vertices[0].depth < 0)
+                //    {
+                //        for (int j = 0; j < branches[i].flowers.Count; j++)
+                //        {
+                //            for (int l = 0; l < branches[i].flowers[j].totalPetals; l++)
+                //            {
+                //                rCam.ReturnFContainer("Midground").AddChild(sLeaser.sprites[flowerIndex]);
+                //                flowerIndex++;
+                //            }
+                //        }
+                //    }
+                //}
             }
 
         }
@@ -580,9 +603,9 @@ namespace Tubus.Objects
 
         public override void InitiateSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam)
         {
-            limbs = new(this);
             Random.State state = Random.state;
             Random.InitState(tubusTree.seed);
+            limbs = new(this);
             sLeaser.sprites = new FSprite[2 + limbs.totalSprites];
             limbs.firstSprite = 2;
             sLeaser.sprites[0] = new FSprite("Futile_White");

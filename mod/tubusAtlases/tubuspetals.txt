@@ -1,52 +1,20 @@
 {"frames": {
 
-"tubusAuxPetal0.png":
-{
-	"frame": {"x":4,"y":4,"w":9,"h":14},
-	"rotated": false,
-	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":9,"h":14},
-	"sourceSize": {"w":9,"h":14}
-},
 "tubusMainPetal0.png":
 {
-	"frame": {"x":17,"y":4,"w":18,"h":11},
+	"frame": {"x":0,"y":0,"w":18,"h":11},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":18,"h":11},
 	"sourceSize": {"w":18,"h":11}
-},
-"tubusMainPetal1.png":
-{
-	"frame": {"x":39,"y":4,"w":16,"h":11},
-	"rotated": false,
-	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":16,"h":11},
-	"sourceSize": {"w":16,"h":11}
-},
-"tubusMainPetal2.png":
-{
-	"frame": {"x":59,"y":4,"w":15,"h":11},
-	"rotated": false,
-	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":15,"h":11},
-	"sourceSize": {"w":15,"h":11}
-},
-"tubusMainPetal3.png":
-{
-	"frame": {"x":78,"y":4,"w":13,"h":11},
-	"rotated": false,
-	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":13,"h":11},
-	"sourceSize": {"w":13,"h":11}
 }},
 "meta": {
 	"app": "https://www.codeandweb.com/texturepacker",
 	"version": "1.0",
 	"image": "tubuspetals.png",
 	"format": "RGBA8888",
-	"size": {"w":95,"h":22},
+	"size": {"w":18,"h":11},
 	"scale": "1",
-	"smartupdate": "$TexturePacker:SmartUpdate:2dc66c4b5ba09515b63fa31f74ebdb05:6de97115f402567dd49f47a9cff8b13f:a0ddb4cdc3314925c32cb6cee8a4c478$"
+	"smartupdate": "$TexturePacker:SmartUpdate:23fbbd9537a61da6ad5a53fa8dda4b40:e65d0415822855be2a29b05d9dbf0f11:a0ddb4cdc3314925c32cb6cee8a4c478$"
 }
 }
