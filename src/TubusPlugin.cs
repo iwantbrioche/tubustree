@@ -18,7 +18,7 @@ using System.Security;
 using System.Security.Permissions;
 using BepInEx.Logging;
 using System.Runtime.CompilerServices;
-using Tubus.PomObjects;
+using Tubus.Objects;
 using System.IO;
 
 #pragma warning disable CS0618
@@ -49,6 +49,7 @@ namespace TubusTreeObject
         private bool PostIsInit;
 
         public static FShader TubusTrunk;
+        public static FShader TubusFlower;
 
         private void RainWorld_OnModsInit(On.RainWorld.orig_OnModsInit orig, RainWorld self)
         {
@@ -60,12 +61,24 @@ namespace TubusTreeObject
                 //MachineConnector.SetRegisteredOI(MOD_ID, remix);
                 Hooks.Hooks.PatchAll();
 
-                AssetBundle bundle = AssetBundle.LoadFromFile(AssetManager.ResolveFilePath("assets/tubus"));
-                Shader trunkShader = bundle.LoadAsset<Shader>("Assets/tubustrunk.shader");
-                TubusTrunk = FShader.CreateShader(trunkShader.name, trunkShader);
+                try
+                {
+                    AssetBundle bundle = AssetBundle.LoadFromFile(AssetManager.ResolveFilePath("assets/tubus"));
+                    Shader trunkShader = bundle.LoadAsset<Shader>("Assets/TubusTrunk.shader");
+                    TubusTrunk = FShader.CreateShader(trunkShader.name, trunkShader);
 
-                if (TubusTrunk == null) Logger.LogError("TubusTrunk Shader is null!");
-                else Logger.LogInfo("TubusTrunk Shader loaded!");
+                    Shader flowerShader = bundle.LoadAsset<Shader>("Assets/TubusFlower.shader");
+                    TubusFlower = FShader.CreateShader(flowerShader.name, flowerShader);
+                }
+                catch (NullReferenceException ex) 
+                {
+                    Logger.LogError($"{MOD_NAME} failed to load! A shader was null!");
+                    Logger.LogError(ex);
+                    throw;
+                }
+
+                if (TubusTrunk != null) Logger.LogInfo("TubusTrunk Shader loaded!");
+                if (TubusFlower != null) Logger.LogInfo("TubusFlower Shader loaded!");
 
                 LoadAtlases();
 
