@@ -60,11 +60,13 @@ Shader "Tubus/TubusTrunk"
                     float f = 1 - min(distance(i.uv.xy, float2(0.5, 0.5)) * 2, 1);
                     float n = tex2D(_NoiseTex, i.uv.xy).x;
                     f -= pow(n, f * lerp(10, 200, i.clr.a));
+                    // f is what controls the circular shape
 
                     float y = i.uv.y;
                     y += i.clr.a;
                     y /= sin(i.uv.x * 0.85 + 1.14) * 0.8;
                     y -= floor(y);
+                    // y is the height where lines will appear
                     
 
                     float h = tex2D(_NoiseTex, float2(i.uv.x, y) * 2.5).x;
@@ -76,32 +78,35 @@ Shader "Tubus/TubusTrunk"
                     h -= sin(y * (i.clr.a * 20) * 3.14) * 1.5;
                     h += sin(i.uv.x) / 3.14;
                     h *= 0.4;
+                    // h is the actual line
 
                     if (f <= 0) return float4(0, 0, 0, 0); 
 
                     if (_fogAmount > 0.0) 
                     {
-                        i.clr.r += 0.1;
-                        i.clr.r *= _fogAmount * 0.6;
+                        i.clr.a += 0.1;
+                        i.clr.a *= _fogAmount * 0.6;
                     }
 
                     float4 effectCol1 = tex2D(_PalTex, float2(30.5/32.0, 5.5/8.0));
                     float4 fogCol = tex2D(_PalTex, float2(1.5/32.0, 7.5/8.0));
+                    float4 darkCol = tex2D(_PalTex, float2(2.5/32.0, 0.5/8.0));
+                    float4 darkPalettePixel = tex2D(_PalTex, float2(29.5/32.0, 0.5/8.0));
 
 
 
                     float4 trunkCol = float4(lerp(float3(0.58, 0.37, 0.23), effectCol1, 0.3 * n), 1);
-                    if (i.clr.r < 0.0) trunkCol = lerp(trunkCol, fogCol, clamp(abs(i.clr.r), 0.2, 0.7));
+                    if (i.clr.r < 0.0) trunkCol = lerp(trunkCol, fogCol, clamp(abs(i.clr.a), 0.2, 0.7));
                     trunkCol = lerp(trunkCol, tex2D(_PalTex, float2(lerp(0.5, 26.5, clamp(f * 0.8, 0.0, 1.0))/32.0, 2.5/8.0)), 0.5);
 
-                    float4 lineCol = float4(lerp(trunkCol, lerp(tex2D(_PalTex, float2(2.5/32.0, 0.5/8.0)), effectCol1, n * 0.4), -h + 0.8).rgb + 0.01, 1.0);
-                    if (i.clr.r < 0.0) lineCol = lerp(lineCol, fogCol, clamp(abs(i.clr.r), 0.2, 0.7));
+                    float4 lineCol = float4(lerp(trunkCol, lerp(darkCol, effectCol1, n * 0.4), -h + 0.8).rgb + 0.01, 1.0);
+                    if (i.clr.r < 0.0) lineCol = lerp(lineCol, fogCol, clamp(abs(i.clr.a), 0.2, 0.7));
 
-                    trunkCol = lerp(tex2D(_PalTex, float2(2.5/32.0, 0.5/8.0)), trunkCol, tex2D(_PalTex, float2(29.5/32.0, 0.5/8.0)) + 0.3);
-                    lineCol = lerp(tex2D(_PalTex, float2(2.5/32.0, 0.5/8.0)), lineCol, tex2D(_PalTex, float2(29.5/32.0, 0.5/8.0)) + 0.3);
+                    trunkCol = lerp(darkCol, trunkCol, darkPalettePixel + 0.3);
+                    lineCol = lerp(darkCol, lineCol, darkPalettePixel + 0.3);
 
-                    if (lineCol.r == 0.0 && lineCol.g == 0.0 && lineCol.b == 0.0) lineCol =tex2D(_PalTex, float2(2.5/32.0, 0.5/8.0));
-                    if (trunkCol.r == 0.0 && trunkCol.g == 0.0 && trunkCol.b == 0.0) trunkCol =tex2D(_PalTex, float2(2.5/32.0, 0.5/8.0));
+                    if (lineCol.r == 0.0 && lineCol.g == 0.0 && lineCol.b == 0.0) lineCol = darkCol;
+                    if (trunkCol.r == 0.0 && trunkCol.g == 0.0 && trunkCol.b == 0.0) trunkCol = darkCol;
                     
                     if (h < 0.65) return float4(lineCol.rgb, 1.0);
                     return float4(trunkCol.rgb, 1.0);

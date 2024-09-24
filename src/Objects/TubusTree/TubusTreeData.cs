@@ -20,13 +20,7 @@ namespace Tubus.Objects.TubusTree
     public class TubusData : ManagedData
     {
         private static readonly List<ManagedField> tubusFields = [
-            new IntegerField("seed", 0, 10000, 1, ManagedFieldWithPanel.ControlType.slider, "Seed"),
-            new FloatField("trunkred", 0f, 255f, 0f, 1f, ManagedFieldWithPanel.ControlType.slider, "Trunk R"),
-            new FloatField("trunkgreen", 0f, 255f, 0f, 1f, ManagedFieldWithPanel.ControlType.slider, "Trunk G"),
-            new FloatField("trunkblue", 0f, 255f, 0f, 1f, ManagedFieldWithPanel.ControlType.slider, "Trunk B"),
-            new FloatField("flowerhue", 0f, 360, 0f, 1f, ManagedFieldWithPanel.ControlType.slider, "Flower H"),
-            new FloatField("flowersat", 50f, 85f, 85f, 1f, ManagedFieldWithPanel.ControlType.slider, "Flower S"),
-            new FloatField("flowerlum", 50f, 70f, 60f, 1f, ManagedFieldWithPanel.ControlType.slider, "Flower L")];
+            new IntegerField("seed", 0, 10000, 1, ManagedFieldWithPanel.ControlType.slider, "Seed")];
         public TubusData(PlacedObject owner) : base(owner, [.. tubusFields]) { }
     }
     public class TubusRepresentation : ManagedRepresentation

@@ -93,7 +93,7 @@ namespace Tubus.Objects.TubusTree
             private TubusTreeGraphics owner;
             private List<Branch> branches;
             private List<Branch> roots;
-            private Room room => owner.tubusTree.room;
+            private Room room => owner.tubus.room;
             public int firstSprite;
             private int branchesStart;
             private int rootStart;
@@ -273,7 +273,7 @@ namespace Tubus.Objects.TubusTree
                     vert.pos = Custom.MoveTowards(vert.pos, new Vector2(vert.pos.x * 6f, vert.pos.y), Random.Range(5f, 14f));
                     vert.pos.x = vert.pos.x * spread + Random.value;
                     vert.pos.y -= down;
-                    Vector2 groundPos = vert.pos + owner.tubusTree.origPos;
+                    Vector2 groundPos = vert.pos + owner.tubus.origPos;
                     if (room.GetTile(room.GetTilePosition(groundPos)).Terrain != Room.Tile.TerrainType.Air && i > 2)
                     {
                         vert.pos.y -= down;
@@ -364,6 +364,7 @@ namespace Tubus.Objects.TubusTree
                             sLeaser.sprites[flowerIndex].scale = 0.45f * branches[i].flowers[j].size;
                             sLeaser.sprites[flowerIndex].scaleY *= Mathf.Clamp(Mathf.Abs(branches[i].flowers[j].outerRing[l].rotation / Custom.VecToDeg(branches[i].flowers[j].rotation)), 1f, 1.6f);
                             sLeaser.sprites[flowerIndex].scaleX *= 1.25f;
+                            sLeaser.sprites[flowerIndex].shader = TubusPlugin.TubusFlower;
                             flowerIndex++;
                         }
                         for (int l = 0; l < branches[i].flowers[j].innerRing.Length; l++)
@@ -372,6 +373,7 @@ namespace Tubus.Objects.TubusTree
                             sLeaser.sprites[flowerIndex].rotation = branches[i].flowers[j].innerRing[l].rotation;
                             sLeaser.sprites[flowerIndex].scale = 0.35f * branches[i].flowers[j].size;
                             sLeaser.sprites[flowerIndex].scaleX *= 1.2f;
+                            sLeaser.sprites[flowerIndex].shader = TubusPlugin.TubusFlower;
                             flowerIndex++;
                         }
                         float flowerRot = Custom.VecToDeg(branches[i].flowers[j].rotation);
@@ -412,9 +414,9 @@ namespace Tubus.Objects.TubusTree
             public void DrawSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPos)
             {
                 Random.State state = Random.state;
-                Random.InitState(owner.tubusTree.seed);
-                Vector2 topChunkPos = owner.tubusTree.topChunk.pos;
-                Vector2 mainChunkPos = owner.tubusTree.firstChunk.pos;
+                Random.InitState(owner.tubus.seed);
+                Vector2 topChunkPos = owner.tubus.topChunk.pos;
+                Vector2 mainChunkPos = owner.tubus.firstChunk.pos;
                 for (int i = 0; i < branches.Count; i++)
                 {
                     Vector2 mainPos = branches[i].vertices[0].pos;
@@ -431,10 +433,6 @@ namespace Tubus.Objects.TubusTree
                         (sLeaser.sprites[branchesStart + i] as TriangleMesh).MoveVertice(j * 4 + 1, branchPos + perpDir * branchRad + normalized + topChunkPos - camPos);
                         (sLeaser.sprites[branchesStart + i] as TriangleMesh).MoveVertice(j * 4 + 2, nextBranchPos - perpDir * otherBranchRad - normalized + topChunkPos - camPos);
                         (sLeaser.sprites[branchesStart + i] as TriangleMesh).MoveVertice(j * 4 + 3, nextBranchPos + perpDir * otherBranchRad - normalized + topChunkPos - camPos);
-                        for (int c = 0; c < 3; c++)
-                        {
-                            (sLeaser.sprites[branchesStart + i] as TriangleMesh).verticeColors[j * 3 + c] = new Color(owner.TrunkR, owner.TrunkG, owner.TrunkB, Mathf.Clamp(branches[i].vertices[j].depth, 0.2f, 1f));
-                        }
                     }
                 }
                 for (int i = 0; i < roots.Count; i++)
@@ -453,10 +451,6 @@ namespace Tubus.Objects.TubusTree
                         (sLeaser.sprites[rootStart + i] as TriangleMesh).MoveVertice(j * 4 + 1, rootPos + perpDir * rootRad + normalized + mainChunkPos - camPos); // 1, 5, 9
                         (sLeaser.sprites[rootStart + i] as TriangleMesh).MoveVertice(j * 4 + 2, nextRootPos - perpDir * otherRootRad - normalized + mainChunkPos - camPos); // 2, 6, 10
                         (sLeaser.sprites[rootStart + i] as TriangleMesh).MoveVertice(j * 4 + 3, nextRootPos + perpDir * otherRootRad - normalized + mainChunkPos - camPos); // 3, 7, 11
-                        for (int c = 0; c < 4; c++)
-                        {
-                            (sLeaser.sprites[rootStart + i] as TriangleMesh).verticeColors[j * 3 + c] = new Color(owner.TrunkR, owner.TrunkG, owner.TrunkB, Mathf.Clamp(roots[i].vertices[j].depth, 0.2f, 1f));
-                        }   
                     }
                 }
                 for (int i = 0; i < branches.Count; i++)
@@ -466,14 +460,12 @@ namespace Tubus.Objects.TubusTree
                     sLeaser.sprites[bulbStart + i].alpha = 0.3f;
                     sLeaser.sprites[bulbStart + i].scale = Random.value + 0.2f;
                     sLeaser.sprites[bulbStart + i].scaleX = Random.value / 3f + 0.6f;
-                    sLeaser.sprites[bulbStart + i].color = new Color(owner.TrunkR, owner.TrunkG, owner.TrunkB, Mathf.Clamp(branches[i].vertices[0].depth, 0.2f, 1f));
 
                     sLeaser.sprites[bulbStart + i + branches.Count].SetPosition(branches[i].OnBranchPos(branches[i].vertices.Count - 2, 0.8f) + topChunkPos - camPos);
                     sLeaser.sprites[bulbStart + i + branches.Count].rotation = Custom.VecToDeg(Custom.PerpendicularVector(branches[i].vertices[branches[i].vertices.Count - 2].pos, branches[i].vertices[branches[i].vertices.Count - 1].pos)) + 90f;
                     sLeaser.sprites[bulbStart + i + branches.Count].alpha = 0.5f;
                     sLeaser.sprites[bulbStart + i + branches.Count].scale = branches[i].vertices[branches[i].vertices.Count - 1].rad / 3f;
                     sLeaser.sprites[bulbStart + i + branches.Count].scaleY = Random.value / 1.5f + 0.65f;
-                    sLeaser.sprites[bulbStart + i + branches.Count].color = new Color(owner.TrunkR, owner.TrunkG, owner.TrunkB, Mathf.Clamp(branches[i].vertices[branches[i].vertices.Count - 1].depth, 0.2f, 1f));
                 }
                 for (int i = 0; i < roots.Count; i++)
                 {
@@ -482,7 +474,6 @@ namespace Tubus.Objects.TubusTree
                     sLeaser.sprites[bulbStart + i + branches.Count * 2].alpha = 0.4f;
                     sLeaser.sprites[bulbStart + i + branches.Count * 2].scale = Random.value + 1.2f;
                     sLeaser.sprites[bulbStart + i + branches.Count * 2].scaleX = Random.value / 2f + 0.8f;
-                    sLeaser.sprites[bulbStart + i + branches.Count * 2].color = new Color(owner.TrunkR, owner.TrunkG, owner.TrunkB);
                 }
                 int flowerIndex = flowerStart;
                 for (int i = 0; i < branches.Count; i++)
@@ -492,27 +483,22 @@ namespace Tubus.Objects.TubusTree
                         for (int l = 0; l < branches[i].flowers[j].outerRing.Length; l++)
                         {
                             sLeaser.sprites[flowerIndex].SetPosition(branches[i].flowers[j].outerRing[l].pos + topChunkPos - camPos);
-                            sLeaser.sprites[flowerIndex].color = Custom.HSL2RGB(owner.FlowerH, owner.FlowerS - 0.2f, owner.FlowerL - 0.1f);
                             flowerIndex++;
                         }
                         for (int l = 0; l < branches[i].flowers[j].innerRing.Length; l++)
                         {
                             sLeaser.sprites[flowerIndex].SetPosition(branches[i].flowers[j].innerRing[l].pos + topChunkPos - camPos);
-                            sLeaser.sprites[flowerIndex].color = Custom.HSL2RGB(owner.FlowerH, owner.FlowerS + 0.1f, owner.FlowerL - 0.15f);
                             flowerIndex++;
                         }
                         float flowerRot = Custom.VecToDeg(branches[i].flowers[j].rotation);
 
                         sLeaser.sprites[flowerIndex].SetPosition(branches[i].flowers[j].pos + topChunkPos - camPos);
-                        sLeaser.sprites[flowerIndex].color = Custom.HSL2RGB(owner.FlowerH, owner.FlowerS, Mathf.Clamp(owner.FlowerL - 0.2f, 0.3f, 1f));
                         flowerIndex++;
 
                         sLeaser.sprites[flowerIndex].SetPosition(branches[i].flowers[j].pos + Custom.RotateAroundOrigo(new Vector2(0f, 3.7f * branches[i].flowers[j].size), flowerRot) + topChunkPos - camPos);
-                        sLeaser.sprites[flowerIndex].color = Custom.HSL2RGB(owner.FlowerH, owner.FlowerS + 0.1f, owner.FlowerL + 0.1f);
                         flowerIndex++;
 
                         sLeaser.sprites[flowerIndex].SetPosition(branches[i].flowers[j].pos - Custom.RotateAroundOrigo(new Vector2(0f, 3.7f * branches[i].flowers[j].size), flowerRot) + topChunkPos - camPos);
-                        sLeaser.sprites[flowerIndex].color = Custom.HSL2RGB(owner.FlowerH, owner.FlowerS + 0.1f, owner.FlowerL + 0.1f);
                         flowerIndex++;
                     }
                 }
@@ -555,19 +541,32 @@ namespace Tubus.Objects.TubusTree
             }
             public void ApplyPalette(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, RoomPalette palette)
             {
-                Random.State state = Random.state;
-                Random.InitState(owner.tubusTree.seed);
+                Color[] effectColA = palette.texture.GetPixels(30, 4, 2, 2);
+                Color[] effectColB = palette.texture.GetPixels(30, 2, 2, 2);
+
+
                 for (int i = 0; i < branches.Count; i++)
                 {
-                    sLeaser.sprites[branchesStart + i].color = Color.black;
+                    sLeaser.sprites[bulbStart + i].color = new Color(1f, 1f, 1f, Mathf.Clamp(branches[i].vertices[0].depth, 0.2f, 1f));
+                    sLeaser.sprites[bulbStart + i + branches.Count].color = new Color(1f, 1f, 1f, Mathf.Clamp(branches[i].vertices[branches[i].vertices.Count - 1].depth, 0.2f, 1f));
+                    for (int j = 0; j < branches[i].vertices.Count - 1; j++)
+                    {
+                        for (int c = 0; c < 3; c++)
+                        {
+                            (sLeaser.sprites[branchesStart + i] as TriangleMesh).verticeColors[j * 3 + c] = new Color(1f, 1f, 1f, Mathf.Clamp(branches[i].vertices[j].depth, 0.2f, 1f));
+                        }
+                    }
                 }
                 for (int i = 0; i < roots.Count; i++)
                 {
-                    sLeaser.sprites[rootStart + i].color = Color.black;
-                }
-                for (int i = 0; i < bulbs; i++)
-                {
-                    sLeaser.sprites[bulbStart + i].color = Color.black;
+                    sLeaser.sprites[bulbStart + i + branches.Count * 2].color = Color.white;
+                    for (int j = 0; j < roots[i].vertices.Count - 1; j++)
+                    {
+                        for (int c = 0; c < 4; c++)
+                        {
+                            (sLeaser.sprites[rootStart + i] as TriangleMesh).verticeColors[j * 3 + c] = new Color(1f, 1f, 1f, Mathf.Clamp(roots[i].vertices[j].depth, 0.2f, 1f));
+                        }
+                    }
                 }
                 int flowerIndex = flowerStart;
                 for (int i = 0; i < branches.Count; i++)
@@ -576,47 +575,40 @@ namespace Tubus.Objects.TubusTree
                     {
                         for (int l = 0; l < branches[i].flowers[j].outerRing.Length; l++)
                         {
-                            sLeaser.sprites[flowerIndex].color = Custom.HSL2RGB(0.8f, 0.6f, 0.6f);
+                            sLeaser.sprites[flowerIndex].color = Color.Lerp(palette.blackColor, Color.Lerp(effectColB[2], palette.fogColor, Mathf.Clamp(branches[i].vertices[branches[i].vertices.Count - 1].depth, 0f, 0.5f)), palette.darkness + 0.5f);
                             flowerIndex++;
                         }
                         for (int l = 0; l < branches[i].flowers[j].innerRing.Length; l++)
                         {
-                            sLeaser.sprites[flowerIndex].color = Custom.HSL2RGB(0.5f, 0.6f, 0.6f);
+                            sLeaser.sprites[flowerIndex].color = Color.Lerp(palette.blackColor, Color.Lerp(effectColB[0], palette.fogColor, Mathf.Clamp(branches[i].vertices[branches[i].vertices.Count - 1].depth, 0f, 0.25f)), palette.darkness + 0.5f);
                             flowerIndex++;
                         }
-                        sLeaser.sprites[flowerIndex].color = Color.white;
+
+                        sLeaser.sprites[flowerIndex].color = Color.Lerp(palette.blackColor, Color.Lerp(effectColB[3], palette.fogColor, Mathf.Clamp(branches[i].vertices[branches[i].vertices.Count - 1].depth, 0f, 0.25f)), palette.darkness + 0.5f);
                         flowerIndex++;
 
-                        sLeaser.sprites[flowerIndex].color = Custom.HSL2RGB(0f, 1f, 0.8f);
+                        sLeaser.sprites[flowerIndex].color = Color.Lerp(palette.blackColor, Color.Lerp(effectColB[1], palette.fogColor, Mathf.Clamp(branches[i].vertices[branches[i].vertices.Count - 1].depth, 0f, 0.25f)), palette.darkness + 0.5f);
                         flowerIndex++;
 
-                        sLeaser.sprites[flowerIndex].color = Custom.HSL2RGB(0f, 1f, 0.8f);
+                        sLeaser.sprites[flowerIndex].color = Color.Lerp(palette.blackColor, Color.Lerp(effectColB[1], palette.fogColor, Mathf.Clamp(branches[i].vertices[branches[i].vertices.Count - 1].depth, 0f, 0.25f)), palette.darkness + 0.5f);
                         flowerIndex++;
                     }
                 }
-                Random.state = state;
             }
 
 
         }
-        public TubusTree tubusTree;
+        public TubusTree tubus;
         private Limbs limbs;
-        private float TrunkR;
-        private float TrunkG;
-        private float TrunkB;
-        private float FlowerH;
-        private float FlowerS;
-        private float FlowerL;
         public TubusTreeGraphics(PhysicalObject ow) : base(ow, false)
         {
-            tubusTree = ow as TubusTree;
-            
+            tubus = ow as TubusTree;
         }
 
         public override void InitiateSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam)
         {
             Random.State state = Random.state;
-            Random.InitState(tubusTree.seed);
+            Random.InitState(tubus.seed);
             limbs = new(this);
             sLeaser.sprites = new FSprite[2 + limbs.totalSprites];
             limbs.firstSprite = 2;
@@ -647,29 +639,24 @@ namespace Tubus.Objects.TubusTree
         public override void DrawSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPos)
         {
             base.DrawSprites(sLeaser, rCam, timeStacker, camPos);
-            sLeaser.sprites[0].SetPosition(tubusTree.firstChunk.pos - camPos);
-            sLeaser.sprites[0].color = new Color(TrunkR, TrunkG, TrunkB);
-            sLeaser.sprites[1].SetPosition(tubusTree.topChunk.pos - camPos);
-            sLeaser.sprites[1].rotation = Custom.VecToDeg(tubusTree.firstChunk.Rotation);
-            sLeaser.sprites[1].color = new Color(TrunkR, TrunkG, TrunkB);
+            sLeaser.sprites[0].SetPosition(tubus.firstChunk.pos - camPos);
+            sLeaser.sprites[1].SetPosition(tubus.topChunk.pos - camPos);
+            sLeaser.sprites[1].rotation = Custom.VecToDeg(tubus.firstChunk.Rotation);
 
             limbs.DrawSprites(sLeaser, rCam, timeStacker, camPos);
         }
         public override void ApplyPalette(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, RoomPalette palette)
         {
-            sLeaser.sprites[0].color = Color.black;
-            sLeaser.sprites[1].color = Color.black;
+            sLeaser.sprites[0].color = Color.white;
+            sLeaser.sprites[1].color = Color.white;
+            Random.State state = Random.state;
+            Random.InitState(tubus.seed);
             limbs.ApplyPalette(sLeaser, rCam, palette);
+            Random.state = state;
         }
         public override void Update()
         {
             base.Update();
-            TrunkR = ((TubusData)tubusTree.abstractTubus.placedObject.data).GetValue<float>("trunkred") / 255f;
-            TrunkG = ((TubusData)tubusTree.abstractTubus.placedObject.data).GetValue<float>("trunkgreen") / 255f;
-            TrunkB = ((TubusData)tubusTree.abstractTubus.placedObject.data).GetValue<float>("trunkblue") / 255f;
-            FlowerH = ((TubusData)tubusTree.abstractTubus.placedObject.data).GetValue<float>("flowerhue") / 360f;
-            FlowerS = ((TubusData)tubusTree.abstractTubus.placedObject.data).GetValue<float>("flowersat") / 100f;
-            FlowerL = ((TubusData)tubusTree.abstractTubus.placedObject.data).GetValue<float>("flowerlum") / 100f;
         }
     }
 }
