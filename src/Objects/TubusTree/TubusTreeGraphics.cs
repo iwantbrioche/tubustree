@@ -2,6 +2,10 @@
 
 namespace Tubus.Objects.TubusTree
 {
+
+    // how the fuck am i gonna comment all of this shit
+    //  i dont even know how half of it works anymore
+    //      :monkwail:
     public class TubusTreeGraphics : GraphicsModule
     {
         private class Limbs
@@ -43,12 +47,14 @@ namespace Tubus.Objects.TubusTree
                     }
                     public float size;
                     public Vector2 rotation;
-                    public Flower(Vector2 p, float s, int extraPetals)
+                    public int vert;
+                    public Flower(Vector2 p, float s, int extraPetals, int v)
                     {
                         pos = p;
                         size = s;
                         innerRing = new Petal[5 + extraPetals];
                         outerRing = new Petal[9 + extraPetals];
+                        vert = v;
                     }
                     public bool CollidingFlowers(Flower other)
                     {
@@ -294,7 +300,7 @@ namespace Tubus.Objects.TubusTree
             private void GenerateFlower(int branchIndex, float sizeMult)
             {
                 int vertIndex = Random.Range(branches[branchIndex].vertices.Count - 2, branches[branchIndex].vertices.Count - 1);
-                Branch.Flower flower = new(branches[branchIndex].OnBranchPos(vertIndex, Random.value * 0.4f + 0.6f), (Random.value * 0.5f + 0.5f) * sizeMult, Random.Range(-1, 4));
+                Branch.Flower flower = new(branches[branchIndex].OnBranchPos(vertIndex, Random.value * 0.4f + 0.6f), (Random.value * 0.5f + 0.5f) * sizeMult, Random.Range(-1, 4), vertIndex);
                 Vector2 facingAngle = (Vector2)Random.onUnitSphere * branches[branchIndex].vertices[vertIndex].rad;
                 flower.pos += facingAngle;
                 // Places the flower at a random position on the branch, then moves the position to a random point on a sphere multiplied by the radius of the branch vertex
@@ -364,7 +370,8 @@ namespace Tubus.Objects.TubusTree
                             sLeaser.sprites[flowerIndex].scale = 0.45f * branches[i].flowers[j].size;
                             sLeaser.sprites[flowerIndex].scaleY *= Mathf.Clamp(Mathf.Abs(branches[i].flowers[j].outerRing[l].rotation / Custom.VecToDeg(branches[i].flowers[j].rotation)), 1f, 1.6f);
                             sLeaser.sprites[flowerIndex].scaleX *= 1.25f;
-                            sLeaser.sprites[flowerIndex].shader = TubusPlugin.TubusFlower;
+                            //sLeaser.sprites[flowerIndex].shader = TubusPlugin.TubusFlower;
+
                             flowerIndex++;
                         }
                         for (int l = 0; l < branches[i].flowers[j].innerRing.Length; l++)
@@ -373,7 +380,8 @@ namespace Tubus.Objects.TubusTree
                             sLeaser.sprites[flowerIndex].rotation = branches[i].flowers[j].innerRing[l].rotation;
                             sLeaser.sprites[flowerIndex].scale = 0.35f * branches[i].flowers[j].size;
                             sLeaser.sprites[flowerIndex].scaleX *= 1.2f;
-                            sLeaser.sprites[flowerIndex].shader = TubusPlugin.TubusFlower;
+                            //sLeaser.sprites[flowerIndex].shader = TubusPlugin.TubusFlower;
+
                             flowerIndex++;
                         }
                         float flowerRot = Custom.VecToDeg(branches[i].flowers[j].rotation);
@@ -381,32 +389,27 @@ namespace Tubus.Objects.TubusTree
                         sLeaser.sprites[flowerIndex] = new("Circle20");
                         sLeaser.sprites[flowerIndex].scale = branches[i].flowers[j].size * 0.55f;
                         sLeaser.sprites[flowerIndex].rotation = flowerRot;
+
                         flowerIndex++;
 
                         sLeaser.sprites[flowerIndex] = new("tubusMainPetal0");
                         sLeaser.sprites[flowerIndex].scale = branches[i].flowers[j].size * 0.55f;
                         sLeaser.sprites[flowerIndex].rotation = flowerRot;
-                        if (branches[i].flowers[j].rotation.y > 0f)
-                        {
+                        if (branches[i].flowers[j].rotation.y > 0f) 
                             sLeaser.sprites[flowerIndex].scaleY = sLeaser.sprites[flowerIndex].scale * 1f + 0.25f * (Mathf.Abs(branches[i].flowers[j].rotation.y) / 30f);
-                        }
-                        else
-                        {
+                        else 
                             sLeaser.sprites[flowerIndex].scaleY = sLeaser.sprites[flowerIndex].scale * 0.4f + 0.35f * (Mathf.Abs(branches[i].flowers[j].rotation.y) / 30f);
-                        }
+
                         flowerIndex++;
 
                         sLeaser.sprites[flowerIndex] = new("tubusMainPetal0");
                         sLeaser.sprites[flowerIndex].scale = branches[i].flowers[j].size * 0.5f;
                         sLeaser.sprites[flowerIndex].rotation = flowerRot + 180f;
                         if (branches[i].flowers[j].rotation.y > 0f)
-                        {
                             sLeaser.sprites[flowerIndex].scaleY = sLeaser.sprites[flowerIndex].scale * 0.4f + 0.35f * (Mathf.Abs(branches[i].flowers[j].rotation.y) / 30f);
-                        }
                         else
-                        {
                             sLeaser.sprites[flowerIndex].scaleY = sLeaser.sprites[flowerIndex].scale * 1f + 0.25f * (Mathf.Abs(branches[i].flowers[j].rotation.y) / 30f);
-                        }
+
                         flowerIndex++;
                     }
                 }
@@ -541,8 +544,6 @@ namespace Tubus.Objects.TubusTree
             }
             public void ApplyPalette(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, RoomPalette palette)
             {
-                Color[] effectColA = palette.texture.GetPixels(30, 4, 2, 2);
-                Color[] effectColB = palette.texture.GetPixels(30, 2, 2, 2);
 
 
                 for (int i = 0; i < branches.Count; i++)
@@ -568,6 +569,14 @@ namespace Tubus.Objects.TubusTree
                         }
                     }
                 }
+                Color effectColB = palette.texture.GetPixel(30, 2);
+                Color.RGBToHSV(effectColB, out float H, out float S, out float V);
+
+                float triadicH = H + 0.33f;
+                if (triadicH > 1f) triadicH -= 1f;
+
+                Color triadicColor = Color.HSVToRGB(triadicH, S, V);
+
                 int flowerIndex = flowerStart;
                 for (int i = 0; i < branches.Count; i++)
                 {
@@ -575,28 +584,36 @@ namespace Tubus.Objects.TubusTree
                     {
                         for (int l = 0; l < branches[i].flowers[j].outerRing.Length; l++)
                         {
-                            sLeaser.sprites[flowerIndex].color = Color.Lerp(palette.blackColor, Color.Lerp(effectColB[2], palette.fogColor, Mathf.Clamp(branches[i].vertices[branches[i].vertices.Count - 1].depth, 0f, 0.5f)), palette.darkness + 0.5f);
+                            sLeaser.sprites[flowerIndex].color = Color.Lerp(Color.Lerp(effectColB, palette.blackColor, Mathf.Clamp(palette.darkness, 0.5f - (effectColB.r + effectColB.g + effectColB.b) / 7.5f, 0.85f)), palette.fogColor, Mathf.Clamp(roots[i].vertices[branches[i].flowers[j].vert].depth, 0f, 0.2f));
                             flowerIndex++;
                         }
                         for (int l = 0; l < branches[i].flowers[j].innerRing.Length; l++)
                         {
-                            sLeaser.sprites[flowerIndex].color = Color.Lerp(palette.blackColor, Color.Lerp(effectColB[0], palette.fogColor, Mathf.Clamp(branches[i].vertices[branches[i].vertices.Count - 1].depth, 0f, 0.25f)), palette.darkness + 0.5f);
+                            Color innerPetal = triadicColor;
+                            innerPetal.r -= (V + S) * 0.25f;
+                            innerPetal.r = Mathf.Clamp01(innerPetal.r);
+
+                            innerPetal.g -= (V + S) * 0.25f;
+                            innerPetal.g = Mathf.Clamp01(innerPetal.g);
+
+                            innerPetal.b -= (V + S) * 0.25f;
+                            innerPetal.b = Mathf.Clamp01(innerPetal.b);
+
+                            sLeaser.sprites[flowerIndex].color = Color.Lerp(Color.Lerp(Color.Lerp(effectColB, innerPetal, 0.55f), palette.blackColor, Mathf.Clamp(palette.darkness, 0.5f - (effectColB.r + effectColB.g + effectColB.b) / 7.5f, 0.85f)), palette.fogColor, Mathf.Clamp(roots[i].vertices[branches[i].flowers[j].vert].depth, 0f, 0.2f));
                             flowerIndex++;
                         }
 
-                        sLeaser.sprites[flowerIndex].color = Color.Lerp(palette.blackColor, Color.Lerp(effectColB[3], palette.fogColor, Mathf.Clamp(branches[i].vertices[branches[i].vertices.Count - 1].depth, 0f, 0.25f)), palette.darkness + 0.5f);
+                        sLeaser.sprites[flowerIndex].color = Color.Lerp(Color.Lerp(Color.HSVToRGB(H, S, V * 0.5f), palette.blackColor, Mathf.Clamp(palette.darkness, 0.5f - (effectColB.r + effectColB.g + effectColB.b) / 7.5f, 0.85f)), palette.fogColor, Mathf.Clamp(roots[i].vertices[branches[i].flowers[j].vert].depth, 0f, 0.2f));
                         flowerIndex++;
 
-                        sLeaser.sprites[flowerIndex].color = Color.Lerp(palette.blackColor, Color.Lerp(effectColB[1], palette.fogColor, Mathf.Clamp(branches[i].vertices[branches[i].vertices.Count - 1].depth, 0f, 0.25f)), palette.darkness + 0.5f);
+                        sLeaser.sprites[flowerIndex].color = Color.Lerp(Color.Lerp(Color.HSVToRGB(H, S * S * (0.6f - ((effectColB.g + effectColB.b) / 4f)), V * 0.6f), palette.blackColor, Mathf.Clamp(palette.darkness, 0.5f - (effectColB.r + effectColB.g + effectColB.b) / 7.5f, 0.85f)), palette.fogColor, Mathf.Clamp(roots[i].vertices[branches[i].flowers[j].vert].depth, 0f, 0.2f));
                         flowerIndex++;
 
-                        sLeaser.sprites[flowerIndex].color = Color.Lerp(palette.blackColor, Color.Lerp(effectColB[1], palette.fogColor, Mathf.Clamp(branches[i].vertices[branches[i].vertices.Count - 1].depth, 0f, 0.25f)), palette.darkness + 0.5f);
+                        sLeaser.sprites[flowerIndex].color = Color.Lerp(Color.Lerp(Color.HSVToRGB(H, S * S * (0.6f - ((effectColB.g + effectColB.b) / 4f)), V * 0.6f), palette.blackColor, Mathf.Clamp(palette.darkness, 0.5f - (effectColB.r + effectColB.g + effectColB.b) / 7.5f, 0.85f)), palette.fogColor, Mathf.Clamp(roots[i].vertices[branches[i].flowers[j].vert].depth, 0f, 0.2f));
                         flowerIndex++;
                     }
                 }
             }
-
-
         }
         public TubusTree tubus;
         private Limbs limbs;

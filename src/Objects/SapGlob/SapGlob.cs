@@ -21,6 +21,8 @@ namespace Tubus.Objects.SapGlob
         public Vector2 rotation;
         public Vector2 lastRotation;
         public Vector2? setRotation;
+        public Vector2 tapPos;
+        public bool harvested;
         public int bites = 5;
         public int BitesLeft => bites;
         public int FoodPoints => 2;
@@ -29,7 +31,6 @@ namespace Tubus.Objects.SapGlob
         public SapGlob(AbstractPhysicalObject abstractPhysicalObject) : base(abstractPhysicalObject)
         {
             bodyChunks = new BodyChunk[1];
-            bodyChunks[0] = new(this, 0, default, 8f, 0.2f);
             bodyChunkConnections = [];
             airFriction = 0.999f;
             gravity = 0.9f;
@@ -45,6 +46,10 @@ namespace Tubus.Objects.SapGlob
             lastRotation = rotation;
             if (grabbedBy.Count > 0)
             {
+                if (!harvested) 
+                { 
+                    harvested = true;
+                }
                 rotation = Custom.PerpendicularVector(Custom.DirVec(firstChunk.pos, grabbedBy[0].grabber.mainBodyChunk.pos));
                 rotation.y = Mathf.Abs(rotation.y);
             }
@@ -56,10 +61,15 @@ namespace Tubus.Objects.SapGlob
             if (firstChunk.ContactPoint.y < 0)
             {
                 rotation = (rotation - Custom.PerpendicularVector(rotation) * 0.1f * firstChunk.vel.x).normalized;
-                BodyChunk bodyChunk = firstChunk;
-                bodyChunk.vel.x = bodyChunk.vel.x * 0.8f;
+                firstChunk.vel.x = firstChunk.vel.x * 0.4f;
             }
-
+            if (!harvested)
+            {
+                firstChunk.HardSetPosition(tapPos);
+                firstChunk.pos = tapPos;
+                firstChunk.lastPos = tapPos;
+                firstChunk.vel = default;
+            }
         }
         public void InitiateSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam)
         {

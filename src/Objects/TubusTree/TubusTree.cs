@@ -16,7 +16,7 @@ namespace Tubus.Objects.TubusTree
             public override void Realize()
             {
                 base.Realize();
-                realizedObject = new TubusTree(this);
+                realizedObject = new TubusTree(this, world);
 
             }
         }
@@ -49,36 +49,42 @@ namespace Tubus.Objects.TubusTree
         public int seed;
         public Vector2 origPos;
 
-        public TubusTree(AbstractPhysicalObject abstractPhysicalObj) : base(abstractPhysicalObj)
+        public TubusTree(AbstractPhysicalObject abstractPhysicalObj, World world) : base(abstractPhysicalObj)
         {
             collisionLayer = 1;
             seed = ((TubusData)abstractTubus.placedObject.data).GetValue<int>("seed");
             origPos = abstractTubus.placedObject.pos;
+            room = world.GetAbstractRoom(abstractPhysicalObj.pos.room).realizedRoom;
+
+            if (room != null)
+            {
+                inAir = room.GetTile(room.GetTilePosition(origPos)).Terrain == Room.Tile.TerrainType.Air && room.GetTile(room.GetTilePosition(origPos - new Vector2(0f, 10f)) - new IntVector2(0, 1)).Terrain == Room.Tile.TerrainType.Air;
+                int chunkNum = inAir ? 2 : 3;
+                bodyChunks = new BodyChunk[chunkNum];
+                if (inAir)
+                {
+                    bodyChunks[0] = new(this, 0, default, 20f, 80f);
+                    bodyChunks[1] = new(this, 1, default, 18f, 60f);
+                    bodyChunks[1].collideWithObjects = false;
+                    bodyChunkConnections = new BodyChunkConnection[1];
+                    bodyChunkConnections[0] = new(bodyChunks[0], bodyChunks[1], 14f, BodyChunkConnection.Type.Normal, 1f, -1f);
+                }
+                else
+                {
+                    bodyChunks[0] = new(this, 0, default, 30f, 80f);
+                    bodyChunks[1] = new(this, 1, default, 20f, 80f);
+                    bodyChunks[2] = new(this, 2, default, 18f, 60f);
+                    bodyChunks[2].collideWithObjects = false;
+                    bodyChunkConnections = new BodyChunkConnection[2];
+                    bodyChunkConnections[0] = new(bodyChunks[0], bodyChunks[1], 20f, BodyChunkConnection.Type.Normal, 1f, -1f);
+                    bodyChunkConnections[1] = new(bodyChunks[1], bodyChunks[2], 14f, BodyChunkConnection.Type.Normal, 1f, -1f);
+                }
+            }
+
         }
         public override void PlaceInRoom(Room placeRoom)
         {
             base.PlaceInRoom(placeRoom);
-            inAir = room.GetTile(room.GetTilePosition(origPos)).Terrain == Room.Tile.TerrainType.Air && room.GetTile(room.GetTilePosition(origPos - new Vector2(0f, 10f)) - new IntVector2(0, 1)).Terrain == Room.Tile.TerrainType.Air;
-            int chunkNum = inAir ? 2 : 3;
-            bodyChunks = new BodyChunk[chunkNum];
-            if (inAir)
-            {
-                bodyChunks[0] = new(this, 0, default, 20f, 80f);
-                bodyChunks[1] = new(this, 1, default, 18f, 60f);
-                bodyChunks[1].collideWithObjects = false;
-                bodyChunkConnections = new BodyChunkConnection[1];
-                bodyChunkConnections[0] = new(bodyChunks[0], bodyChunks[1], 14f, BodyChunkConnection.Type.Normal, 1f, -1f);
-            }
-            else
-            {
-                bodyChunks[0] = new(this, 0, default, 30f, 80f);
-                bodyChunks[1] = new(this, 1, default, 20f, 80f);
-                bodyChunks[2] = new(this, 2, default, 18f, 60f);
-                bodyChunks[2].collideWithObjects = false;
-                bodyChunkConnections = new BodyChunkConnection[2];
-                bodyChunkConnections[0] = new(bodyChunks[0], bodyChunks[1], 20f, BodyChunkConnection.Type.Normal, 1f, -1f);
-                bodyChunkConnections[1] = new(bodyChunks[1], bodyChunks[2], 14f, BodyChunkConnection.Type.Normal, 1f, -1f);
-            }
         }
         public override void InitiateGraphicsModule()
         {
@@ -113,13 +119,16 @@ namespace Tubus.Objects.TubusTree
                 }
             }
         }
-        public void CreateGlob(Vector2 pos)
+        public void CreateGlob(Vector2 pos, int index)
         {
-            AbstractSapGlob abstractConsumable = new(room.world, null, room.GetWorldCoordinate(origPos), room.game.GetNewID());
-            room.abstractRoom.AddEntity(abstractConsumable);
-            abstractConsumable.pos = room.GetWorldCoordinate(origPos);
-            abstractConsumable.RealizeInRoom();
-            abstractConsumable.realizedObject.firstChunk.HardSetPosition(pos);
+            float stickAngle = Custom.AimFromOneVectorToAnother(bodyChunks[index].pos, pos);
+            pos = bodyChunks[index].pos + Custom.DirVec(bodyChunks[index].pos, stickAngle) * bodyChunks[index].rad;
+
+            AbstractSapGlob abstractSapGlob = new(room.world, null, room.GetWorldCoordinate(origPos), room.game.GetNewID());
+            room.abstractRoom.AddEntity(abstractSapGlob);
+            abstractSapGlob.pos = room.GetWorldCoordinate(origPos);
+            abstractSapGlob.RealizeInRoom();
+            (abstractSapGlob.realizedObject as SapGlob.SapGlob).tapPos = pos;
         }
     }
 }

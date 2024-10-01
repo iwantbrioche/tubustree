@@ -11,6 +11,17 @@ namespace TubusTreeObject.Hooks
             IL.Spear.LodgeInCreature_CollisionResult_bool_bool += Spear_LodgeInCreature_CollisionResult_bool_bool1;
 
             On.Player.Grabability += Player_Grabability;
+
+            On.ScavengerAI.CollectScore_PhysicalObject_bool += ScavengerAI_CollectScore_PhysicalObject_bool;
+        }
+
+        private static int ScavengerAI_CollectScore_PhysicalObject_bool(On.ScavengerAI.orig_CollectScore_PhysicalObject_bool orig, ScavengerAI self, PhysicalObject obj, bool weaponFiltered)
+        {
+            if (obj is SapGlob)
+            {
+                return 5;
+            }
+            return orig(self, obj, weaponFiltered);
         }
 
         private static Player.ObjectGrabability Player_Grabability(On.Player.orig_Grabability orig, Player self, PhysicalObject obj)
@@ -52,20 +63,18 @@ namespace TubusTreeObject.Hooks
                         self.stuckRotation = Custom.Angle(self.throwDir.ToVector2(), self.stuckInChunk.Rotation);
                         self.firstChunk.MoveWithOtherObject(eu, self.stuckInChunk, Vector2.zero);
                         new AbstractPhysicalObject.AbstractSpearStick(self.abstractPhysicalObject, result.obj.abstractPhysicalObject, self.stuckInChunkIndex, self.stuckBodyPart, self.stuckRotation);
-                        tubus.CreateGlob(result.collisionPoint);
+                        tubus.CreateGlob(result.collisionPoint, self.stuckInChunkIndex);
                         return true;
                     }
                     return false;
                 });
                 tubusCurs.Emit(OpCodes.Brtrue, brLabel);
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
                 TubusPlugin.Logger.LogError("Spear.LodgeInCreature ILHook failed!");
                 throw ex;
             }
-
-
         }
 
         private static bool Spear_HitSomething(On.Spear.orig_HitSomething orig, Spear self, SharedPhysics.CollisionResult result, bool eu)
