@@ -1,4 +1,5 @@
-﻿using static Tubus.Objects.SapGlob.SapGlob;
+﻿
+using static Tubus.Objects.SapGlob.SapGlob;
 using static Tubus.Objects.RegisterObjects;
 
 namespace Tubus.Objects.TubusTree
@@ -102,11 +103,12 @@ namespace Tubus.Objects.TubusTree
         }
         public override void Collide(PhysicalObject otherObject, int myChunk, int otherChunk)
         {
-            //being hit makes branches shake
+            //being hit makes branches shake TODO
             //gourmand slide bonk
             if (otherObject is Player player)
             {
-                if (player.animation == Player.AnimationIndex.BellySlide)
+                // dont boink below certain velocity
+                if (player.animation == Player.AnimationIndex.BellySlide && otherObject.bodyChunks[otherChunk].vel.x > 6f)
                 {
                     float dir = Custom.Angle(bodyChunks[myChunk].pos, otherObject.bodyChunks[otherChunk].pos);
                     if (dir > 0f)
@@ -124,7 +126,7 @@ namespace Tubus.Objects.TubusTree
             float stickAngle = Custom.AimFromOneVectorToAnother(bodyChunks[index].pos, pos);
             pos = bodyChunks[index].pos + Custom.DirVec(bodyChunks[index].pos, stickAngle) * bodyChunks[index].rad;
 
-            AbstractSapGlob abstractSapGlob = new(room.world, null, room.GetWorldCoordinate(origPos), room.game.GetNewID());
+            AbstractSapGlob abstractSapGlob = new(room.world, null, room.GetWorldCoordinate(pos), room.game.GetNewID());
             room.abstractRoom.AddEntity(abstractSapGlob);
             abstractSapGlob.pos = room.GetWorldCoordinate(origPos);
             abstractSapGlob.RealizeInRoom();

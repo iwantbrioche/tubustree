@@ -20,7 +20,6 @@ namespace Tubus.Objects.SapGlob
 
         public Vector2 rotation;
         public Vector2 lastRotation;
-        public Vector2? setRotation;
         public Vector2 tapPos;
         public bool harvested;
         public int bites = 5;
@@ -31,37 +30,39 @@ namespace Tubus.Objects.SapGlob
         public SapGlob(AbstractPhysicalObject abstractPhysicalObject) : base(abstractPhysicalObject)
         {
             bodyChunks = new BodyChunk[1];
+            bodyChunks[0] = new(this, 0, default, 3f, 0.25f);
             bodyChunkConnections = [];
             airFriction = 0.999f;
             gravity = 0.9f;
             bounce = 0f;
             surfaceFriction = 0.9f;
-            collisionLayer = 1;
+            collisionLayer = 2;
             waterFriction = 0.95f;
             buoyancy = 0f;
         }
         public override void Update(bool eu)
         {
+            // gloopy effect, drips downward slowly
+            // splats on ground and puddles outward slowly
+            // leaves little droplets of sap that spread out when moving across surface
+            // drips of sap come off
             base.Update(eu);
             lastRotation = rotation;
             if (grabbedBy.Count > 0)
             {
-                if (!harvested) 
-                { 
-                    harvested = true;
-                }
+                harvested = true;
+                if (collisionLayer == 2) room.ChangeCollisionLayerForObject(this, 1);
                 rotation = Custom.PerpendicularVector(Custom.DirVec(firstChunk.pos, grabbedBy[0].grabber.mainBodyChunk.pos));
                 rotation.y = Mathf.Abs(rotation.y);
             }
-            if (setRotation.HasValue)
-            {
-                rotation = setRotation.Value;
-                setRotation = null;
-            }
             if (firstChunk.ContactPoint.y < 0)
             {
-                rotation = (rotation - Custom.PerpendicularVector(rotation) * 0.1f * firstChunk.vel.x).normalized;
-                firstChunk.vel.x = firstChunk.vel.x * 0.4f;
+                firstChunk.vel.x *= 0.4f;
+            }
+            if (firstChunk.ContactPoint.x != 0)
+            {
+                firstChunk.vel.y *= 0.4f;
+                firstChunk.vel.x += 0.1f * firstChunk.ContactPoint.x;
             }
             if (!harvested)
             {
@@ -83,13 +84,14 @@ namespace Tubus.Objects.SapGlob
         public void DrawSprites(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPos)
         {
             Vector2 pos = Vector2.Lerp(firstChunk.lastPos, firstChunk.pos, timeStacker);
-            Vector2 v = Vector3.Slerp(lastRotation, rotation, timeStacker);
+            Vector2 r = Vector3.Slerp(lastRotation, rotation, timeStacker);
 
             sLeaser.sprites[0].SetPosition(pos - camPos);
-            sLeaser.sprites[0].rotation = Custom.VecToDeg(v);
+            sLeaser.sprites[0].rotation = Custom.VecToDeg(r);
             sLeaser.sprites[0].scale = Mathf.Lerp(0.2f, 1f, bites / 5f);
+            sLeaser.sprites[0].scaleY *= 1.2f;
             sLeaser.sprites[1].SetPosition(pos - camPos);
-            sLeaser.sprites[1].rotation = Custom.VecToDeg(v);
+            sLeaser.sprites[1].rotation = Custom.VecToDeg(r);
             sLeaser.sprites[1].scale = Mathf.Lerp(0.2f, 1f, bites / 5f);
 
             if (slatedForDeletetion || room != rCam.room)

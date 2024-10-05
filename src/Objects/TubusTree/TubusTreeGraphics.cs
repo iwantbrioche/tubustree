@@ -554,7 +554,7 @@ namespace Tubus.Objects.TubusTree
                     {
                         for (int c = 0; c < 3; c++)
                         {
-                            (sLeaser.sprites[branchesStart + i] as TriangleMesh).verticeColors[j * 3 + c] = new Color(1f, 1f, 1f, Mathf.Clamp(branches[i].vertices[j].depth, 0.2f, 1f));
+                            (sLeaser.sprites[branchesStart + i] as TriangleMesh).verticeColors[j * 4 + c] = new Color(1f, 1f, 1f, Mathf.Clamp(branches[i].vertices[j].depth, 0.2f, 1f));
                         }
                     }
                 }
@@ -565,7 +565,7 @@ namespace Tubus.Objects.TubusTree
                     {
                         for (int c = 0; c < 4; c++)
                         {
-                            (sLeaser.sprites[rootStart + i] as TriangleMesh).verticeColors[j * 3 + c] = new Color(1f, 1f, 1f, Mathf.Clamp(roots[i].vertices[j].depth, 0.2f, 1f));
+                            (sLeaser.sprites[rootStart + i] as TriangleMesh).verticeColors[j * 4 + c] = new Color(1f, 1f, 1f, Mathf.Clamp(roots[i].vertices[j].depth, 0.2f, 1f));
                         }
                     }
                 }
@@ -574,8 +574,9 @@ namespace Tubus.Objects.TubusTree
 
                 float triadicH = H + 0.33f;
                 if (triadicH > 1f) triadicH -= 1f;
+                float triadicH2 = H + 0.66f;
+                if (triadicH > 1f) triadicH -= 1f;
 
-                Color triadicColor = Color.HSVToRGB(triadicH, S, V);
 
                 int flowerIndex = flowerStart;
                 for (int i = 0; i < branches.Count; i++)
@@ -584,32 +585,23 @@ namespace Tubus.Objects.TubusTree
                     {
                         for (int l = 0; l < branches[i].flowers[j].outerRing.Length; l++)
                         {
-                            sLeaser.sprites[flowerIndex].color = Color.Lerp(Color.Lerp(effectColB, palette.blackColor, Mathf.Clamp(palette.darkness, 0.5f - (effectColB.r + effectColB.g + effectColB.b) / 7.5f, 0.85f)), palette.fogColor, Mathf.Clamp(roots[i].vertices[branches[i].flowers[j].vert].depth, 0f, 0.2f));
+                            sLeaser.sprites[flowerIndex].color = Color.Lerp(Color.Lerp(effectColB, palette.blackColor, Mathf.Clamp(palette.darkness, 0.5f - (effectColB.r + effectColB.g + effectColB.b) / 7.5f, 0.8f)), palette.fogColor, Mathf.Clamp(roots[i].vertices[branches[i].flowers[j].vert].depth, 0f, 0.2f));
                             flowerIndex++;
                         }
                         for (int l = 0; l < branches[i].flowers[j].innerRing.Length; l++)
                         {
-                            Color innerPetal = triadicColor;
-                            innerPetal.r -= (V + S) * 0.25f;
-                            innerPetal.r = Mathf.Clamp01(innerPetal.r);
 
-                            innerPetal.g -= (V + S) * 0.25f;
-                            innerPetal.g = Mathf.Clamp01(innerPetal.g);
-
-                            innerPetal.b -= (V + S) * 0.25f;
-                            innerPetal.b = Mathf.Clamp01(innerPetal.b);
-
-                            sLeaser.sprites[flowerIndex].color = Color.Lerp(Color.Lerp(Color.Lerp(effectColB, innerPetal, 0.55f), palette.blackColor, Mathf.Clamp(palette.darkness, 0.5f - (effectColB.r + effectColB.g + effectColB.b) / 7.5f, 0.85f)), palette.fogColor, Mathf.Clamp(roots[i].vertices[branches[i].flowers[j].vert].depth, 0f, 0.2f));
+                            sLeaser.sprites[flowerIndex].color = Color.Lerp(Color.Lerp(Color.Lerp(effectColB, Color.HSVToRGB(triadicH, Mathf.Clamp01(S + 0.2f), V), 0.35f + V * 0.25f), palette.blackColor, Mathf.Clamp(palette.darkness, 0.5f - (effectColB.r + effectColB.g + effectColB.b) / 7.5f, 0.8f)), palette.fogColor, Mathf.Clamp(roots[i].vertices[branches[i].flowers[j].vert].depth, 0f, 0.2f));
                             flowerIndex++;
                         }
 
-                        sLeaser.sprites[flowerIndex].color = Color.Lerp(Color.Lerp(Color.HSVToRGB(H, S, V * 0.5f), palette.blackColor, Mathf.Clamp(palette.darkness, 0.5f - (effectColB.r + effectColB.g + effectColB.b) / 7.5f, 0.85f)), palette.fogColor, Mathf.Clamp(roots[i].vertices[branches[i].flowers[j].vert].depth, 0f, 0.2f));
+                        sLeaser.sprites[flowerIndex].color = Color.Lerp(Color.Lerp(Color.Lerp(effectColB, Color.HSVToRGB(triadicH, S, Mathf.Clamp(V - 0.35f, 0.35f, 1f)), 0.4f), palette.blackColor, Mathf.Clamp(palette.darkness, 0.5f - (effectColB.r + effectColB.g + effectColB.b) / 7.5f, 0.8f)), palette.fogColor, Mathf.Clamp(roots[i].vertices[branches[i].flowers[j].vert].depth, 0f, 0.2f));
                         flowerIndex++;
 
-                        sLeaser.sprites[flowerIndex].color = Color.Lerp(Color.Lerp(Color.HSVToRGB(H, S * S * (0.6f - ((effectColB.g + effectColB.b) / 4f)), V * 0.6f), palette.blackColor, Mathf.Clamp(palette.darkness, 0.5f - (effectColB.r + effectColB.g + effectColB.b) / 7.5f, 0.85f)), palette.fogColor, Mathf.Clamp(roots[i].vertices[branches[i].flowers[j].vert].depth, 0f, 0.2f));
+                        sLeaser.sprites[flowerIndex].color = Color.Lerp(Color.Lerp(Color.Lerp(effectColB, Color.HSVToRGB(triadicH2, S, V), 0.25f), palette.blackColor, Mathf.Clamp(palette.darkness, 0.5f - (effectColB.r + effectColB.g + effectColB.b) / 7.5f, 0.8f)), palette.fogColor, Mathf.Clamp(roots[i].vertices[branches[i].flowers[j].vert].depth, 0f, 0.2f));
                         flowerIndex++;
 
-                        sLeaser.sprites[flowerIndex].color = Color.Lerp(Color.Lerp(Color.HSVToRGB(H, S * S * (0.6f - ((effectColB.g + effectColB.b) / 4f)), V * 0.6f), palette.blackColor, Mathf.Clamp(palette.darkness, 0.5f - (effectColB.r + effectColB.g + effectColB.b) / 7.5f, 0.85f)), palette.fogColor, Mathf.Clamp(roots[i].vertices[branches[i].flowers[j].vert].depth, 0f, 0.2f));
+                        sLeaser.sprites[flowerIndex].color = Color.Lerp(Color.Lerp(Color.Lerp(effectColB, Color.HSVToRGB(triadicH2, S, V), 0.25f), palette.blackColor, Mathf.Clamp(palette.darkness, 0.5f - (effectColB.r + effectColB.g + effectColB.b) / 7.5f, 0.8f)), palette.fogColor, Mathf.Clamp(roots[i].vertices[branches[i].flowers[j].vert].depth, 0f, 0.2f));
                         flowerIndex++;
                     }
                 }

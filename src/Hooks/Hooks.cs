@@ -56,8 +56,7 @@ namespace TubusTreeObject.Hooks
                 {
                     if (result.obj is TubusTree tubus)
                     {
-                        if (result.chunk == null || tubus.bottomChunk != null && result.chunk == tubus.bottomChunk)
-                            result.chunk = tubus.firstChunk;
+                        if (result.chunk == null || tubus.bottomChunk != null && result.chunk == tubus.bottomChunk) result.chunk = tubus.firstChunk;
 
                         self.stuckInChunkIndex = result.chunk.index;
                         self.stuckRotation = Custom.Angle(self.throwDir.ToVector2(), self.stuckInChunk.Rotation);
