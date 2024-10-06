@@ -54,6 +54,9 @@ namespace Tubus.Objects.TubusTree
         {
             collisionLayer = 1;
             seed = ((TubusData)abstractTubus.placedObject.data).GetValue<int>("seed");
+            // This is how you access your ManagedField's values from the placedObject.data, you cast it to your ManagedData class and use the GetValue<T>(string fieldName) method
+            // T is the type of value you want and fieldName is the key from your ManagedField
+
             origPos = abstractTubus.placedObject.pos;
             room = world.GetAbstractRoom(abstractPhysicalObj.pos.room).realizedRoom;
 
@@ -80,12 +83,9 @@ namespace Tubus.Objects.TubusTree
                     bodyChunkConnections[0] = new(bodyChunks[0], bodyChunks[1], 20f, BodyChunkConnection.Type.Normal, 1f, -1f);
                     bodyChunkConnections[1] = new(bodyChunks[1], bodyChunks[2], 14f, BodyChunkConnection.Type.Normal, 1f, -1f);
                 }
+
             }
 
-        }
-        public override void PlaceInRoom(Room placeRoom)
-        {
-            base.PlaceInRoom(placeRoom);
         }
         public override void InitiateGraphicsModule()
         {

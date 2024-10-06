@@ -4,7 +4,6 @@ global using System.Text.RegularExpressions;
 global using System.Collections.Generic;
 global using System.Reflection;
 global using BepInEx;
-global using MoreSlugcats;
 global using Mono.Cecil.Cil;
 global using MonoMod.Cil;
 global using UnityEngine;

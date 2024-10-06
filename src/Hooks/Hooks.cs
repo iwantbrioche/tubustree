@@ -1,4 +1,5 @@
-﻿using Tubus.Objects.SapGlob;
+﻿using Tubus.Objects;
+using Tubus.Objects.SapGlob;
 using Tubus.Objects.TubusTree;
 
 namespace TubusTreeObject.Hooks
@@ -13,6 +14,29 @@ namespace TubusTreeObject.Hooks
             On.Player.Grabability += Player_Grabability;
 
             On.ScavengerAI.CollectScore_PhysicalObject_bool += ScavengerAI_CollectScore_PhysicalObject_bool;
+
+            On.AImapper.FindAccessibilityOfCurrentTile += AImapper_FindAccessibilityOfCurrentTile;
+        }
+
+        private static void AImapper_FindAccessibilityOfCurrentTile(On.AImapper.orig_FindAccessibilityOfCurrentTile orig, AImapper self)
+        {
+            orig(self);
+            for (int i = 0; i < self.room.roomSettings.placedObjects.Count; i++)
+            {
+                if (self.room.roomSettings.placedObjects[i].type == RegisterObjects.ObjectTypes.TubusTree)
+                {
+                    if (self.room.GetTilePosition(self.room.roomSettings.placedObjects[i].pos) == new IntVector2(self.x, self.y) ||
+                        self.room.GetTilePosition(self.room.roomSettings.placedObjects[i].pos) + new IntVector2(0, 1) == new IntVector2(self.x, self.y) ||
+                        self.room.GetTilePosition(self.room.roomSettings.placedObjects[i].pos) + new IntVector2(-1, 0) == new IntVector2(self.x, self.y) ||
+                        self.room.GetTilePosition(self.room.roomSettings.placedObjects[i].pos) + new IntVector2(1, 0) == new IntVector2(self.x, self.y) ||
+                        self.room.GetTilePosition(self.room.roomSettings.placedObjects[i].pos) + new IntVector2(1, 1) == new IntVector2(self.x, self.y) ||
+                        self.room.GetTilePosition(self.room.roomSettings.placedObjects[i].pos) + new IntVector2(-1, 1) == new IntVector2(self.x, self.y))
+                    {
+                        Debug.Log($"tile {self.x}, {self.y} set to solid!");
+                        self.map.map[self.x, self.y] = new(AItile.Accessibility.Solid, (self.room.GetTile(self.x, self.y).DeepWater ? 1 : 0) + (self.room.GetTile(self.x, self.y).WaterSurface ? 2 : 0));
+                    }
+                }
+            }
         }
 
         private static int ScavengerAI_CollectScore_PhysicalObject_bool(On.ScavengerAI.orig_CollectScore_PhysicalObject_bool orig, ScavengerAI self, PhysicalObject obj, bool weaponFiltered)
