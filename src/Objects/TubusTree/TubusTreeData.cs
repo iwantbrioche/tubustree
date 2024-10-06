@@ -1,18 +1,18 @@
 ﻿
 using DevInterface;
 using static Pom.Pom;
-using static Tubus.Objects.RegisterObjects;
+using static Tubus.Objects.ObjectTypes;
 
 namespace Tubus.Objects.TubusTree
 {
-    // The ManagedObjectType for the Tubus Tree, this is what gets registered into POM
+    // The ManagedObjectType for the Tubus Tree, this is what gets registered into POM as a DevTools object
     public class TubusObjectType : ManagedObjectType
     {
         // The constructor takes in the name of the object, what catagory it goes into, the objectType of your UAD, the ManagedData, and the ManagedRepresentation
         public TubusObjectType() : base(ObjectTypes.TubusTree.value, "Tubus Tree", null, typeof(TubusData), typeof(TubusRepresentation)) { }
 
         // The MakeObject method is what adds your object to the room, because the Tubus Tree isn't a simple UAD, we override the MakeObject method and handle it with our own logic
-        // Because we are already adding the object to the room, we return null after our logic to tell POM that we don't need an object added, this is also why we don't need an objectType
+        // Because we are already adding the object to the room, we return null after our logic to tell POM that we don't need an object added, this is also why we don't need an objectType in our constructor
         //  For a simple UAD you don't need to override this, as passing in the UAD's objectType will allow POM to add it to the room on its own (..I think)
         public override UpdatableAndDeletable MakeObject(PlacedObject placedObject, Room room)
         {

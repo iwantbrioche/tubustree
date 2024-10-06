@@ -1,6 +1,6 @@
 ﻿
 using static Tubus.Objects.SapGlob.SapGlob;
-using static Tubus.Objects.RegisterObjects;
+using static Tubus.Objects.ObjectTypes;
 
 namespace Tubus.Objects.TubusTree
 {

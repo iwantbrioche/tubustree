@@ -98,7 +98,7 @@ namespace TubusTreeObject
             {
                 if (PostIsInit) return;
 
-                RegisterObjects.RegisterPOMObjects();
+                ObjectTypes.RegisterPOMObjects();
 
                 PostIsInit = true;
             }

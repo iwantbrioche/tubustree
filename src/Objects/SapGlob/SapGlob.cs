@@ -1,4 +1,4 @@
-﻿using static Tubus.Objects.RegisterObjects;
+﻿using static Tubus.Objects.ObjectTypes;
 
 
 namespace Tubus.Objects.SapGlob
@@ -8,7 +8,7 @@ namespace Tubus.Objects.SapGlob
         public class AbstractSapGlob : AbstractConsumable
         {
             public AbstractSapGlob(World world, PhysicalObject realizedObject, WorldCoordinate pos, EntityID id)
-                : base(world, ObjectTypes.SapGlob, realizedObject, pos, id, -1, -1, null)
+                : base(world, ObjectTypes.ObjectTypes.SapGlob, realizedObject, pos, id, -1, -1, null)
             { 
             }
             public override void Realize()

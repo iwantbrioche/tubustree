@@ -23,7 +23,7 @@ namespace TubusTreeObject.Hooks
             orig(self);
             for (int i = 0; i < self.room.roomSettings.placedObjects.Count; i++)
             {
-                if (self.room.roomSettings.placedObjects[i].type == RegisterObjects.ObjectTypes.TubusTree)
+                if (self.room.roomSettings.placedObjects[i].type == ObjectTypes.TubusTree)
                 {
                     if (self.room.GetTilePosition(self.room.roomSettings.placedObjects[i].pos) == new IntVector2(self.x, self.y) ||
                         self.room.GetTilePosition(self.room.roomSettings.placedObjects[i].pos) + new IntVector2(0, 1) == new IntVector2(self.x, self.y) ||
