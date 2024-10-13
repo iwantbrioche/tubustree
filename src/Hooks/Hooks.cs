@@ -25,15 +25,23 @@ namespace TubusTreeObject.Hooks
             {
                 if (self.room.roomSettings.placedObjects[i].type == ObjectTypes.TubusTree)
                 {
-                    if (self.room.GetTilePosition(self.room.roomSettings.placedObjects[i].pos) == new IntVector2(self.x, self.y) ||
-                        self.room.GetTilePosition(self.room.roomSettings.placedObjects[i].pos) + new IntVector2(0, 1) == new IntVector2(self.x, self.y) ||
-                        self.room.GetTilePosition(self.room.roomSettings.placedObjects[i].pos) + new IntVector2(-1, 0) == new IntVector2(self.x, self.y) ||
-                        self.room.GetTilePosition(self.room.roomSettings.placedObjects[i].pos) + new IntVector2(1, 0) == new IntVector2(self.x, self.y) ||
-                        self.room.GetTilePosition(self.room.roomSettings.placedObjects[i].pos) + new IntVector2(1, 1) == new IntVector2(self.x, self.y) ||
-                        self.room.GetTilePosition(self.room.roomSettings.placedObjects[i].pos) + new IntVector2(-1, 1) == new IntVector2(self.x, self.y))
+                    if (self.room.GetTilePosition(self.room.roomSettings.placedObjects[i].pos - new Vector2(0f, 10f)) == new IntVector2(self.x, self.y) ||
+                        self.room.GetTilePosition(self.room.roomSettings.placedObjects[i].pos - new Vector2(0f, 10f)) + new IntVector2(0, 1) == new IntVector2(self.x, self.y) ||
+                        self.room.GetTilePosition(self.room.roomSettings.placedObjects[i].pos - new Vector2(0f, 10f)) + new IntVector2(-1, 0) == new IntVector2(self.x, self.y) ||
+                        self.room.GetTilePosition(self.room.roomSettings.placedObjects[i].pos - new Vector2(0f, 10f)) + new IntVector2(1, 0) == new IntVector2(self.x, self.y) ||
+                        self.room.GetTilePosition(self.room.roomSettings.placedObjects[i].pos - new Vector2(0f, 10f)) + new IntVector2(1, 1) == new IntVector2(self.x, self.y) ||
+                        self.room.GetTilePosition(self.room.roomSettings.placedObjects[i].pos - new Vector2(0f, 10f)) + new IntVector2(-1, 1) == new IntVector2(self.x, self.y)
+                        )
                     {
-                        Debug.Log($"tile {self.x}, {self.y} set to solid!");
-                        self.map.map[self.x, self.y] = new(AItile.Accessibility.Solid, (self.room.GetTile(self.x, self.y).DeepWater ? 1 : 0) + (self.room.GetTile(self.x, self.y).WaterSurface ? 2 : 0));
+                        self.map.map[self.x, self.y] = new(AItile.Accessibility.Floor, (self.room.GetTile(self.x, self.y).DeepWater ? 1 : 0) + (self.room.GetTile(self.x, self.y).WaterSurface ? 2 : 0));
+                        if (self.room.game != null && self.room.game.showAImap)
+                        {
+                            FSprite fSprite = new("pixel");
+                            fSprite.color = new Color(0.3f, 1f, 0.3f);
+                            fSprite.scale = 19f;
+                            fSprite.alpha = 0.3f;
+                            self.room.AddObject(new DebugSprite(self.room.MiddleOfTile(self.x, self.y), fSprite, self.room));
+                        }
                     }
                 }
             }
@@ -43,15 +51,17 @@ namespace TubusTreeObject.Hooks
         {
             if (obj is SapGlob)
             {
-                return 5;
+                return 7;
             }
             return orig(self, obj, weaponFiltered);
         }
 
         private static Player.ObjectGrabability Player_Grabability(On.Player.orig_Grabability orig, Player self, PhysicalObject obj)
         {
-            if (obj is SapGlob)
+            if (obj is SapGlob glob)
             {
+                if (glob.harvestTimer < 200) return Player.ObjectGrabability.CantGrab;
+
                 return Player.ObjectGrabability.OneHand;
             }
             return orig(self, obj);
@@ -84,9 +94,9 @@ namespace TubusTreeObject.Hooks
 
                         self.stuckInChunkIndex = result.chunk.index;
                         self.stuckRotation = Custom.Angle(self.throwDir.ToVector2(), self.stuckInChunk.Rotation);
-                        self.firstChunk.MoveWithOtherObject(eu, self.stuckInChunk, Vector2.zero);
+                        self.firstChunk.MoveWithOtherObject(eu, self.stuckInChunk, result.collisionPoint);
                         new AbstractPhysicalObject.AbstractSpearStick(self.abstractPhysicalObject, result.obj.abstractPhysicalObject, self.stuckInChunkIndex, self.stuckBodyPart, self.stuckRotation);
-                        tubus.CreateGlob(result.collisionPoint, self.stuckInChunkIndex);
+                        tubus.CreateGlob(self, self.stuckInChunkIndex);
                         return true;
                     }
                     return false;

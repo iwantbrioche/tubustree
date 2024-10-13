@@ -1,6 +1,4 @@
-﻿using static Tubus.Objects.ObjectTypes;
-
-
+﻿
 namespace Tubus.Objects.SapGlob
 {
     public class SapGlob : PlayerCarryableItem, IDrawable, IPlayerEdible
@@ -8,7 +6,7 @@ namespace Tubus.Objects.SapGlob
         public class AbstractSapGlob : AbstractConsumable
         {
             public AbstractSapGlob(World world, PhysicalObject realizedObject, WorldCoordinate pos, EntityID id)
-                : base(world, ObjectTypes.ObjectTypes.SapGlob, realizedObject, pos, id, -1, -1, null)
+                : base(world, ObjectTypes.SapGlob, realizedObject, pos, id, -1, -1, null)
             { 
             }
             public override void Realize()
@@ -22,7 +20,10 @@ namespace Tubus.Objects.SapGlob
         public Vector2 lastRotation;
         public Vector2 tapPos;
         public bool harvested;
+        public int harvestTimer;
         public int bites = 5;
+        public Spear tapSpear;
+        public TubusTree.TubusTree tubus;
         public int BitesLeft => bites;
         public int FoodPoints => 2;
         public bool Edible => true;
@@ -48,6 +49,10 @@ namespace Tubus.Objects.SapGlob
             // drips of sap come off
             base.Update(eu);
             lastRotation = rotation;
+            if (harvestTimer < 200)
+            {
+                harvestTimer++;
+            }
             if (grabbedBy.Count > 0)
             {
                 harvested = true;
@@ -88,11 +93,21 @@ namespace Tubus.Objects.SapGlob
 
             sLeaser.sprites[0].SetPosition(pos - camPos);
             sLeaser.sprites[0].rotation = Custom.VecToDeg(r);
-            sLeaser.sprites[0].scale = Mathf.Lerp(0.2f, 1f, bites / 5f);
             sLeaser.sprites[0].scaleY *= 1.2f;
             sLeaser.sprites[1].SetPosition(pos - camPos);
             sLeaser.sprites[1].rotation = Custom.VecToDeg(r);
-            sLeaser.sprites[1].scale = Mathf.Lerp(0.2f, 1f, bites / 5f);
+
+            if (harvestTimer < 200)
+            {
+                sLeaser.sprites[0].scale = 0.1f + ((harvestTimer / 200f) - 0.1f);
+                sLeaser.sprites[1].scale = 0.1f + ((harvestTimer / 200f) - 0.1f);
+            }
+            else
+            {
+                sLeaser.sprites[0].scale = Mathf.Lerp(0.2f, 1f, bites / 5f);
+                sLeaser.sprites[1].scale = Mathf.Lerp(0.2f, 1f, bites / 5f);
+            }
+
 
             if (slatedForDeletetion || room != rCam.room)
             {

@@ -1,6 +1,4 @@
-﻿
-using static Tubus.Objects.SapGlob.SapGlob;
-using static Tubus.Objects.ObjectTypes;
+﻿using static Tubus.Objects.SapGlob.SapGlob;
 
 namespace Tubus.Objects.TubusTree
 {
@@ -108,7 +106,7 @@ namespace Tubus.Objects.TubusTree
             if (otherObject is Player player)
             {
                 // dont boink below certain velocity
-                if (player.animation == Player.AnimationIndex.BellySlide && otherObject.bodyChunks[otherChunk].vel.x > 6f)
+                if (player.animation == Player.AnimationIndex.BellySlide && otherObject.bodyChunks[otherChunk].vel.x > 4f)
                 {
                     float dir = Custom.Angle(bodyChunks[myChunk].pos, otherObject.bodyChunks[otherChunk].pos);
                     if (dir > 0f)
@@ -121,15 +119,18 @@ namespace Tubus.Objects.TubusTree
                 }
             }
         }
-        public void CreateGlob(Vector2 pos, int index)
+        public void CreateGlob(Spear spear, int index)
         {
-            float stickAngle = Custom.AimFromOneVectorToAnother(bodyChunks[index].pos, pos);
-            pos = bodyChunks[index].pos + Custom.DirVec(bodyChunks[index].pos, stickAngle) * bodyChunks[index].rad;
+            float stickAngle = Custom.AimFromOneVectorToAnother(bodyChunks[index].pos, spear.firstChunk.pos);
+            Vector2 pos = bodyChunks[index].pos + Custom.DirVec(bodyChunks[index].pos, spear.firstChunk.pos) * bodyChunks[index].rad;
+            
 
             AbstractSapGlob abstractSapGlob = new(room.world, null, room.GetWorldCoordinate(pos), room.game.GetNewID());
             room.abstractRoom.AddEntity(abstractSapGlob);
             abstractSapGlob.pos = room.GetWorldCoordinate(origPos);
             abstractSapGlob.RealizeInRoom();
+            (abstractSapGlob.realizedObject as SapGlob.SapGlob).tubus = this;
+            (abstractSapGlob.realizedObject as SapGlob.SapGlob).tapSpear = spear;
             (abstractSapGlob.realizedObject as SapGlob.SapGlob).tapPos = pos;
         }
     }
