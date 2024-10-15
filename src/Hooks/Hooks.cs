@@ -1,8 +1,10 @@
 ﻿using Tubus.Objects;
 using Tubus.Objects.SapGlob;
 using Tubus.Objects.TubusTree;
+using TubusTreeObject;
+using static Tubus.Objects.SapGlob.SapGlob;
 
-namespace TubusTreeObject.Hooks
+namespace Tubus.Hooks
 {
     public static class Hooks
     {
@@ -17,6 +19,7 @@ namespace TubusTreeObject.Hooks
 
             On.AImapper.FindAccessibilityOfCurrentTile += AImapper_FindAccessibilityOfCurrentTile;
         }
+
 
         private static void AImapper_FindAccessibilityOfCurrentTile(On.AImapper.orig_FindAccessibilityOfCurrentTile orig, AImapper self)
         {
@@ -60,7 +63,7 @@ namespace TubusTreeObject.Hooks
         {
             if (obj is SapGlob glob)
             {
-                if (glob.harvestTimer < 200) return Player.ObjectGrabability.CantGrab;
+                if (glob.harvestTimer < glob.harvestTimerMax) return Player.ObjectGrabability.CantGrab;
 
                 return Player.ObjectGrabability.OneHand;
             }

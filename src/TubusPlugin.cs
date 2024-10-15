@@ -19,6 +19,7 @@ using BepInEx.Logging;
 using System.Runtime.CompilerServices;
 using Tubus.Objects;
 using System.IO;
+using Tubus.Hooks;
 
 #pragma warning disable CS0618
 
@@ -35,12 +36,10 @@ namespace TubusTreeObject
         public const string MOD_VER = "1.0";
         private const string ATLASES_DIR = "tubusAtlases";
         public static new ManualLogSource Logger { get; private set; }
-        //public static TemplateRemix remix;
         private void OnEnable()
         {
             On.RainWorld.OnModsInit += RainWorld_OnModsInit;
             On.RainWorld.PostModsInit += RainWorld_PostModsInit;
-            //remix = new TemplateRemix();
             Logger = base.Logger;
         }
 
@@ -57,8 +56,7 @@ namespace TubusTreeObject
             {
                 if (IsInit) return;
 
-                //MachineConnector.SetRegisteredOI(MOD_ID, remix);
-                Hooks.Hooks.PatchAll();
+                Hooks.PatchAll();
 
                 try
                 {

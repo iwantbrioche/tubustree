@@ -132,6 +132,7 @@ namespace Tubus.Objects.TubusTree
             (abstractSapGlob.realizedObject as SapGlob.SapGlob).tubus = this;
             (abstractSapGlob.realizedObject as SapGlob.SapGlob).tapSpear = spear;
             (abstractSapGlob.realizedObject as SapGlob.SapGlob).tapPos = pos;
+            (abstractSapGlob.realizedObject as SapGlob.SapGlob).harvestTimer = 200;
         }
     }
 }

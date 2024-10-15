@@ -96,7 +96,6 @@ namespace Tubus.Objects.TubusTree
                 }
             }
 
-
             private TubusTreeGraphics owner;
             private List<Branch> branches;
             private List<Branch> roots;
@@ -333,9 +332,11 @@ namespace Tubus.Objects.TubusTree
                 flower.pos += facingAngle;
                 // Places the flower at a random position on the branch, then moves the position to a random point on a sphere multiplied by the radius of the branch vertex
                 flower.rotation = new Vector2(Random.Range(0f, 30f), Random.Range(0f, 30f)) * Mathf.Sign(Custom.VecToDeg(facingAngle));
+                // Gets a random rotation multiplied by the sign of the flower's facingAngle
                 float petalAngle = 360f / flower.petalRing[0].Length;
                 float currentAngle = petalAngle;
                 currentAngle += Random.Range(0f, 15f);
+                // petalAngle is the degree multiple that each petal set to, currentAngle is the actual degree that the petals are set to
                 for (int i = 0; i < flower.petalRing[0].Length; i++)
                 {
                     float rad = currentAngle * -Mathf.PI / 180f;
@@ -655,10 +656,10 @@ namespace Tubus.Objects.TubusTree
         public override void AddToContainer(RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, FContainer newContatiner)
         {
             newContatiner ??= rCam.ReturnFContainer("Items");
-            foreach (var sprite in sLeaser.sprites)
+            for (int i = 0; i < sLeaser.sprites.Length; i++)
             {
-                sprite.RemoveFromContainer();
-                newContatiner.AddChild(sprite);
+                sLeaser.sprites[i].RemoveFromContainer();
+                newContatiner.AddChild(sLeaser.sprites[i]);
             }
             limbs.AddToContainer(sLeaser, rCam);
         }
