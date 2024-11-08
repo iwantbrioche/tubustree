@@ -7,14 +7,22 @@
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":18,"h":11},
 	"sourceSize": {"w":18,"h":11}
+},
+"tubusSapGrad.png":
+{
+	"frame": {"x":0,"y":11,"w":16,"h":16},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":16,"h":16},
+	"sourceSize": {"w":16,"h":16}
 }},
 "meta": {
 	"app": "https://www.codeandweb.com/texturepacker",
 	"version": "1.0",
 	"image": "tubuspetals.png",
 	"format": "RGBA8888",
-	"size": {"w":18,"h":11},
+	"size": {"w":18,"h":27},
 	"scale": "1",
-	"smartupdate": "$TexturePacker:SmartUpdate:23fbbd9537a61da6ad5a53fa8dda4b40:e65d0415822855be2a29b05d9dbf0f11:a0ddb4cdc3314925c32cb6cee8a4c478$"
+	"smartupdate": "$TexturePacker:SmartUpdate:faae0deeeb6d877a3560defab0cf49aa:1f64cb0808220b31a1499f5d2d2c3198:a0ddb4cdc3314925c32cb6cee8a4c478$"
 }
 }

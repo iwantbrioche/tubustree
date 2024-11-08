@@ -48,6 +48,7 @@ namespace TubusTreeObject
 
         public static FShader TubusTrunk;
         public static FShader TubusFlower;
+        public static FShader TubusSap;
 
         private void RainWorld_OnModsInit(On.RainWorld.orig_OnModsInit orig, RainWorld self)
         {
@@ -66,6 +67,9 @@ namespace TubusTreeObject
 
                     Shader flowerShader = bundle.LoadAsset<Shader>("Assets/TubusFlower.shader");
                     TubusFlower = FShader.CreateShader(flowerShader.name, flowerShader);
+
+                    Shader sapShader = bundle.LoadAsset<Shader>("Assets/TubusSap.shader");
+                    TubusSap = FShader.CreateShader(sapShader.name, sapShader);
                 }
                 catch (NullReferenceException ex) 
                 {

@@ -98,6 +98,15 @@ namespace Tubus.Objects.TubusTree
             topChunk.HardSetPosition(firstChunk.pos + Custom.RotateAroundOrigo(new Vector2(0f, 10f), Random.Range(-8f, 8f)));
             Random.state = state;
             base.Update(eu);
+            //if (Input.GetKeyDown("j"))
+            //{
+            //    AbstractSapGlob abstractSapGlob = new(room.world, null, room.GetWorldCoordinate((Vector2)Futile.mousePosition + room.game.cameras.FirstOrDefault().pos), room.game.GetNewID());
+            //    room.abstractRoom.AddEntity(abstractSapGlob);
+            //    abstractSapGlob.pos = room.GetWorldCoordinate((Vector2)Futile.mousePosition + room.game.cameras.FirstOrDefault().pos);
+            //    abstractSapGlob.RealizeInRoom();
+            //    (abstractSapGlob.realizedObject as SapGlob.SapGlob).tapPos = (Vector2)Futile.mousePosition + room.game.cameras.FirstOrDefault().pos;
+            //    (abstractSapGlob.realizedObject as SapGlob.SapGlob).spawnHarvested = true;
+            //}
         }
         public override void Collide(PhysicalObject otherObject, int myChunk, int otherChunk)
         {
@@ -119,12 +128,18 @@ namespace Tubus.Objects.TubusTree
                 }
             }
         }
+        public override void HitByWeapon(Weapon weapon)
+        {
+            if (weapon is Spear spear)
+            {
+                Debug.Log("hit by spear");
+                CreateGlob(spear, spear.stuckInChunkIndex);
+            }
+        }
         public void CreateGlob(Spear spear, int index)
         {
-            float stickAngle = Custom.AimFromOneVectorToAnother(bodyChunks[index].pos, spear.firstChunk.pos);
-            Vector2 pos = bodyChunks[index].pos + Custom.DirVec(bodyChunks[index].pos, spear.firstChunk.pos) * bodyChunks[index].rad;
+            Vector2 pos = bodyChunks[index].pos + Custom.DirVec(bodyChunks[index].pos, new Vector2(bodyChunks[index].pos.x + (5f * Mathf.Sign(spear.firstChunk.pos.x - bodyChunks[index].pos.x)), bodyChunks[index].pos.y)) * bodyChunks[index].rad * 0.8f;
             
-
             AbstractSapGlob abstractSapGlob = new(room.world, null, room.GetWorldCoordinate(pos), room.game.GetNewID());
             room.abstractRoom.AddEntity(abstractSapGlob);
             abstractSapGlob.pos = room.GetWorldCoordinate(origPos);
@@ -132,7 +147,8 @@ namespace Tubus.Objects.TubusTree
             (abstractSapGlob.realizedObject as SapGlob.SapGlob).tubus = this;
             (abstractSapGlob.realizedObject as SapGlob.SapGlob).tapSpear = spear;
             (abstractSapGlob.realizedObject as SapGlob.SapGlob).tapPos = pos;
-            (abstractSapGlob.realizedObject as SapGlob.SapGlob).harvestTimer = 200;
+            (abstractSapGlob.realizedObject as SapGlob.SapGlob).side = Mathf.Sign(spear.firstChunk.pos.x - bodyChunks[index].pos.x);
+            //(abstractSapGlob.realizedObject as SapGlob.SapGlob).harvestTimer = 200;
         }
     }
 }

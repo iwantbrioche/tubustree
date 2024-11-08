@@ -1,8 +1,8 @@
-﻿using Tubus.Objects;
+﻿using MoreSlugcats;
+using Tubus.Objects;
 using Tubus.Objects.SapGlob;
 using Tubus.Objects.TubusTree;
 using TubusTreeObject;
-using static Tubus.Objects.SapGlob.SapGlob;
 
 namespace Tubus.Hooks
 {
@@ -15,11 +15,22 @@ namespace Tubus.Hooks
 
             On.Player.Grabability += Player_Grabability;
 
+            On.MoreSlugcats.SlugNPCAI.GetFoodType += SlugNPCAI_GetFoodType;
+
             On.ScavengerAI.CollectScore_PhysicalObject_bool += ScavengerAI_CollectScore_PhysicalObject_bool;
 
             On.AImapper.FindAccessibilityOfCurrentTile += AImapper_FindAccessibilityOfCurrentTile;
+
         }
 
+        private static SlugNPCAI.Food SlugNPCAI_GetFoodType(On.MoreSlugcats.SlugNPCAI.orig_GetFoodType orig, MoreSlugcats.SlugNPCAI self, PhysicalObject food)
+        {
+            if (food is SapGlob)
+            {
+                return SlugNPCAI.Food.SlimeMold;
+            }
+            return orig(self, food);
+        }
 
         private static void AImapper_FindAccessibilityOfCurrentTile(On.AImapper.orig_FindAccessibilityOfCurrentTile orig, AImapper self)
         {
@@ -37,14 +48,6 @@ namespace Tubus.Hooks
                         )
                     {
                         self.map.map[self.x, self.y] = new(AItile.Accessibility.Floor, (self.room.GetTile(self.x, self.y).DeepWater ? 1 : 0) + (self.room.GetTile(self.x, self.y).WaterSurface ? 2 : 0));
-                        if (self.room.game != null && self.room.game.showAImap)
-                        {
-                            FSprite fSprite = new("pixel");
-                            fSprite.color = new Color(0.3f, 1f, 0.3f);
-                            fSprite.scale = 19f;
-                            fSprite.alpha = 0.3f;
-                            self.room.AddObject(new DebugSprite(self.room.MiddleOfTile(self.x, self.y), fSprite, self.room));
-                        }
                     }
                 }
             }
@@ -63,7 +66,7 @@ namespace Tubus.Hooks
         {
             if (obj is SapGlob glob)
             {
-                if (glob.harvestTimer < glob.harvestTimerMax) return Player.ObjectGrabability.CantGrab;
+                if (glob.harvestTimer < glob.harvestTimerMax || (!glob.harvested && glob.spearStickable)) return Player.ObjectGrabability.CantGrab;
 
                 return Player.ObjectGrabability.OneHand;
             }
@@ -99,7 +102,6 @@ namespace Tubus.Hooks
                         self.stuckRotation = Custom.Angle(self.throwDir.ToVector2(), self.stuckInChunk.Rotation);
                         self.firstChunk.MoveWithOtherObject(eu, self.stuckInChunk, result.collisionPoint);
                         new AbstractPhysicalObject.AbstractSpearStick(self.abstractPhysicalObject, result.obj.abstractPhysicalObject, self.stuckInChunkIndex, self.stuckBodyPart, self.stuckRotation);
-                        tubus.CreateGlob(self, self.stuckInChunkIndex);
                         return true;
                     }
                     return false;
@@ -115,7 +117,7 @@ namespace Tubus.Hooks
 
         private static bool Spear_HitSomething(On.Spear.orig_HitSomething orig, Spear self, SharedPhysics.CollisionResult result, bool eu)
         {
-            if (result.obj is TubusTree)
+            if (result.obj is not null and TubusTree tubus)
             {
                 self.room.PlaySound(SoundID.Spear_Stick_In_Creature, self.firstChunk);
                 self.LodgeInCreature(result, eu);
@@ -123,6 +125,5 @@ namespace Tubus.Hooks
             }
             return orig(self, result, eu);
         }
-
     }
 }

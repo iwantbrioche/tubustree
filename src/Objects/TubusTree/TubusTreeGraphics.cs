@@ -396,7 +396,7 @@ namespace Tubus.Objects.TubusTree
                             sLeaser.sprites[FlowerIndex(i, j, 0, op)].scale = 0.45f * branches[i].flowers[j].size;
                             sLeaser.sprites[FlowerIndex(i, j, 0, op)].scaleY *= Mathf.Clamp(Mathf.Abs(branches[i].flowers[j].petalRing[0][op].rotation / Custom.VecToDeg(branches[i].flowers[j].rotation)), 1f, 1.6f);
                             sLeaser.sprites[FlowerIndex(i, j, 0, op)].scaleX *= 1.25f;
-                            //sLeaser.sprites[flowerIndex].shader = TubusPlugin.TubusFlower;
+                            //sLeaser.sprites[FlowerIndex(i, j, 0, op)].shader = TubusPlugin.TubusFlower;
                         }
                         int lastPetal = 0;
                         for (int ip = 0; ip < branches[i].flowers[j].petalRing[1].Length; ip++)
@@ -405,7 +405,7 @@ namespace Tubus.Objects.TubusTree
                             sLeaser.sprites[FlowerIndex(i, j, 1, ip)].rotation = branches[i].flowers[j].petalRing[1][ip].rotation;
                             sLeaser.sprites[FlowerIndex(i, j, 1, ip)].scale = 0.35f * branches[i].flowers[j].size;
                             sLeaser.sprites[FlowerIndex(i, j, 1, ip)].scaleX *= 1.2f;
-                            //sLeaser.sprites[flowerIndex].shader = TubusPlugin.TubusFlower;
+                            //sLeaser.sprites[FlowerIndex(i, j, 0, ip)].shader = TubusPlugin.TubusFlower;
 
                             lastPetal = ip + 1;
                         }
